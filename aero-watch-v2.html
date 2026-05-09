@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aero-Watch · IndiGo Operations</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue-dark:#0A2240;
+  --blue-mid:#0D3060;
+  --blue:#1A4F8A;
+  --blue-soft:#2563A8;
+  --blue-light:#4A90D9;
+  --blue-pale:#EBF3FC;
+  --blue-ghost:#F4F8FE;
+  --surface:#FFFFFF;
+  --surface2:#F7FAFD;
+  --surface3:#EEF4FB;
+  --border:#D6E4F0;
+  --border-soft:#E8F0F8;
+  --text:#0D1F35;
+  --text-mid:#3A5470;
+  --text-soft:#6B8AAA;
+  --text-muted:#9BB5CC;
+  --ok:#16A34A;
+  --ok-bg:#F0FDF4;
+  --ok-border:#BBF7D0;
+  --warn:#D97706;
+  --warn-bg:#FFFBEB;
+  --warn-border:#FDE68A;
+  --danger:#DC2626;
+  --danger-bg:#FEF2F2;
+  --danger-border:#FECACA;
+  --info:#1D4ED8;
+  --info-bg:#EFF6FF;
+  --info-border:#BFDBFE;
+  --radius:10px;
+  --radius-sm:6px;
+  --shadow:0 1px 4px rgba(10,34,64,.07), 0 2px 12px rgba(10,34,64,.05);
+  --shadow-md:0 2px 8px rgba(10,34,64,.10), 0 4px 24px rgba(10,34,64,.07);
+}
+
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--surface2);color:var(--text);font-size:13px}
+
+/* ── LAYOUT ── */
+#shell{display:grid;grid-template-rows:56px 1fr;height:100vh}
+#topbar{background:var(--blue-dark);display:flex;align-items:center;padding:0 20px;gap:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.08)}
+#main{display:grid;grid-template-columns:280px 1fr 340px;height:calc(100vh - 56px);overflow:hidden}
+
+/* ── TOP BAR ── */
+.logo{display:flex;align-items:center;gap:10px;margin-right:28px}
+.logo-mark{width:28px;height:28px;background:var(--blue-light);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:16px;height:16px;fill:white}
+.logo-text{font-size:15px;font-weight:600;color:#fff;letter-spacing:.3px}
+.logo-text span{color:var(--blue-light);font-weight:300}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;font-size:11px;color:rgba(255,255,255,.7)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.top-nav{display:flex;margin-left:auto;gap:2px}
+.tnav{padding:6px 14px;font-size:12px;font-weight:500;color:rgba(255,255,255,.55);cursor:pointer;border-radius:6px;transition:all .18s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.tnav:hover{background:rgba(255,255,255,.08);color:#fff}
+.tnav.active{background:rgba(255,255,255,.12);color:#fff}
+.gear{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .18s;margin-left:6px}
+.gear:hover{background:rgba(255,255,255,.1);color:#fff}
+.gear svg{width:18px;height:18px;stroke:currentColor;fill:none}
+
+/* ── LEFT: DASHBOARD ── */
+#left{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-soft);padding:14px 16px 8px;flex-shrink:0}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 14px;flex-shrink:0}
+.kpi{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius);padding:12px 14px;cursor:default;transition:box-shadow .18s}
+.kpi:hover{box-shadow:var(--shadow)}
+.kpi-val{font-size:26px;font-weight:600;line-height:1;margin-bottom:4px;font-family:'DM Mono',monospace}
+.kpi-lbl{font-size:11px;color:var(--text-soft);font-weight:400}
+.kpi-sub{font-size:10px;margin-top:3px;font-weight:500}
+.kpi.danger .kpi-val{color:var(--danger)}
+.kpi.warn .kpi-val{color:var(--warn)}
+.kpi.ok .kpi-val{color:var(--ok)}
+.kpi.blue .kpi-val{color:var(--blue-soft)}
+.kpi.danger .kpi-sub{color:var(--danger)}
+.kpi.warn .kpi-sub{color:var(--warn)}
+.kpi.ok .kpi-sub{color:var(--ok)}
+.divider{height:1px;background:var(--border-soft);margin:0 16px;flex-shrink:0}
+.airport-section{flex:1;overflow-y:auto;padding:0 16px 16px}
+.airport-card{border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px;background:var(--surface)}
+.airport-name{font-size:12px;font-weight:600;color:var(--text);display:flex;justify-content:space-between;align-items:center}
+.airport-detail{font-size:11px;color:var(--text-soft);margin-top:3px}
+.airport-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.atag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.atag.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)}
+.atag.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+.atag.danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.atag.info{background:var(--info-bg);color:var(--info);border:1px solid var(--info-border)}
+
+/* ── CENTER: MAP ── */
+#center{display:flex;flex-direction:column;background:#0A2240;overflow:hidden;position:relative;z-index:0}
+#shell.table-open #center{visibility:hidden}
+#map{flex:1;min-height:0;pointer-events:auto}
+#map.locked{pointer-events:none}
+#bottom-panel{background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column}
+#flight-detail{display:none;padding:16px;border-bottom:1px solid var(--border-soft)}
+.fd-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.fd-flt{font-size:16px;font-weight:600}
+.fd-tail{font-size:12px;color:var(--text-soft);margin-top:2px}
+.fd-close{background:none;border:none;cursor:pointer;color:var(--text-soft);font-size:18px;line-height:1;padding:0;transition:color .15s}
+.fd-close:hover{color:var(--text)}
+.fd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.fd-cell{background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px}
+.fd-cell-lbl{font-size:10px;color:var(--text-soft);font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.fd-cell-val{font-size:13px;font-weight:600}
+.fd-chain{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px}
+.chain-leg{display:flex;align-items:center;gap:0;flex-shrink:0}
+.chain-airport{text-align:center;min-width:48px}
+.chain-iata{font-size:12px;font-weight:700;color:var(--blue-soft)}
+.chain-time{font-size:10px;color:var(--text-soft)}
+.chain-line{flex:1;height:1px;background:var(--border);min-width:24px;margin:0 2px}
+.chain-arrow{font-size:10px;color:var(--text-muted)}
+.chain-affected{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:3px;padding:0 5px}
+.chain-affected .chain-iata{color:var(--warn);font-size:11px}
+.fd-actions{display:flex;gap:8px;margin-top:12px}
+.btn-evaluate{background:var(--blue-soft);color:#fff;border:none;padding:9px 20px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .18s;display:flex;align-items:center;gap:6px}
+.btn-evaluate:hover{background:var(--blue)}
+.btn-evaluate svg{width:14px;height:14px;stroke:white;fill:none}
+.btn-dismiss{background:var(--surface2);color:var(--text-mid);border:1px solid var(--border);padding:9px 16px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .18s}
+.btn-dismiss:hover{background:var(--surface3)}
+#scenario-area{padding:14px 16px;display:flex;gap:10px;align-items:flex-start}
+#scenario-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;border-radius:var(--radius-sm);resize:none;height:52px;transition:border-color .2s;line-height:1.4}
+#scenario-input:focus{outline:none;border-color:var(--blue-light)}
+#scenario-input::placeholder{color:var(--text-muted)}
+.btn-eval-main{background:var(--blue-dark);color:#fff;border:none;padding:9px 18px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .18s;height:52px;display:flex;align-items:center;gap:6px}
+.btn-eval-main:hover{background:var(--blue-mid)}
+.btn-eval-main svg{width:14px;height:14px;stroke:white;fill:none;flex-shrink:0}
+
+/* ── RIGHT: RISK FEED ── */
+#right{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.feed-filters{display:flex;gap:4px;padding:10px 12px;border-bottom:1px solid var(--border-soft);flex-shrink:0;flex-wrap:wrap}
+.filter-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--text-soft);background:var(--surface);transition:all .18s;white-space:nowrap}
+.filter-pill.active{background:var(--blue-dark);color:#fff;border-color:var(--blue-dark)}
+#risk-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+#risk-list::-webkit-scrollbar{width:4px}
+#risk-list::-webkit-scrollbar-thumb{background:var(--border)}
+.risk-item{padding:12px 14px;border-bottom:1px solid var(--border-soft);cursor:pointer;transition:background .15s;position:relative}
+.risk-item:hover{background:var(--blue-ghost)}
+.risk-item.selected{background:var(--blue-pale);border-left:3px solid var(--blue-soft)}
+.ri-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.ri-flt{font-size:13px;font-weight:600;color:var(--text)}
+.ri-status{font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px}
+.ri-status.disrupted{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.ri-status.delayed{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+.ri-status.monitoring{background:var(--info-bg);color:var(--info);border:1px solid var(--info-border)}
+.ri-route{font-size:12px;color:var(--text-mid);margin-bottom:5px}
+.ri-tags{display:flex;gap:4px;flex-wrap:wrap}
+.ri-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;background:var(--surface3);color:var(--text-soft)}
+.ri-tag.hot{background:var(--danger-bg);color:var(--danger)}
+.ri-tag.med{background:var(--warn-bg);color:var(--warn)}
+.ri-tag.cool{background:var(--info-bg);color:var(--info)}
+.feed-footer{padding:10px 14px;border-top:1px solid var(--border-soft);font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;flex-shrink:0}
+
+/* ── EVAL RESULTS ── */
+#eval-results{display:none;background:var(--surface);position:fixed;inset:56px 0 0 0;z-index:1200;overflow-y:auto;padding:24px;pointer-events:auto}
+.eval-close-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.eval-back{background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);padding:7px 14px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px}
+.eval-back:hover{background:var(--surface3)}
+.eval-back svg{width:14px;height:14px;stroke:currentColor;fill:none}
+.eval-title{font-size:18px;font-weight:600}
+.eval-sub{font-size:13px;color:var(--text-soft);margin-top:2px}
+.eval-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+.eval-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.eval-card-hdr{padding:14px 16px;border-bottom:1px solid var(--border)}
+.eval-card-hdr h3{font-size:14px;font-weight:600;margin-bottom:2px}
+.eval-card-hdr p{font-size:12px;color:var(--text-soft)}
+.eval-card-hdr.opt1{background:var(--ok-bg);border-bottom-color:var(--ok-border)}
+.eval-card-hdr.opt1 h3{color:var(--ok)}
+.eval-card-hdr.opt2{background:var(--warn-bg);border-bottom-color:var(--warn-border)}
+.eval-card-hdr.opt2 h3{color:var(--warn)}
+.eval-card-hdr.opt3{background:var(--info-bg);border-bottom-color:var(--info-border)}
+.eval-card-hdr.opt3 h3{color:var(--info)}
+.eval-card-body{padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text-mid)}
+.eval-card-body strong{color:var(--text);font-weight:600}
+.eval-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.eval-meta-cell{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius);padding:14px;text-align:center}
+.eval-meta-cell .val{font-size:20px;font-weight:600;color:var(--blue-soft);font-family:'DM Mono',monospace}
+.eval-meta-cell .lbl{font-size:11px;color:var(--text-soft);margin-top:4px}
+.disruption-banner{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start}
+.disruption-banner svg{width:20px;height:20px;stroke:var(--danger);fill:none;flex-shrink:0;margin-top:1px}
+.disruption-banner .title{font-size:14px;font-weight:600;color:var(--danger);margin-bottom:4px}
+.disruption-banner .desc{font-size:13px;color:var(--text-mid);line-height:1.6}
+
+/* ── TABLE OVERLAY ── */
+#table-overlay{display:none;position:fixed;inset:56px 0 0 0;background:var(--surface2);z-index:1100;overflow-y:auto;padding:20px}
+.tbl-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.tbl-title{font-size:16px;font-weight:600}
+.tbl-close{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);padding:7px 14px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-left:auto;transition:all .18s}
+.tbl-close:hover{background:var(--surface3)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-soft);background:var(--surface2);border-bottom:1px solid var(--border)}
+td{padding:9px 14px;border-bottom:1px solid var(--border-soft);font-size:12px;color:var(--text-mid)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--blue-ghost)}
+td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font-size:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500}
+.badge.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)}
+.badge.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+.badge.danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.badge.info{background:var(--info-bg);color:var(--info);border:1px solid var(--info-border)}
+.badge.blue{background:var(--blue-pale);color:var(--blue-soft)}
+
+/* ── SETTINGS MODAL ── */
+#settings-modal{display:none;position:fixed;inset:0;background:rgba(10,34,64,.45);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+#settings-modal.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:420px;box-shadow:var(--shadow-md)}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal label{display:block;font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;margin-top:12px}
+.modal input,.modal select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;border-radius:var(--radius-sm);transition:border-color .2s}
+.modal input:focus,.modal select:focus{outline:none;border-color:var(--blue-light)}
+.modal-save{width:100%;margin-top:16px;padding:10px;background:var(--blue-dark);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .18s}
+.modal-save:hover{background:var(--blue-mid)}
+
+/* ── LEAFLET OVERRIDES ── */
+.leaflet-popup-content-wrapper{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:12px;box-shadow:var(--shadow-md);padding:0}
+.leaflet-popup-content{margin:12px 14px;line-height:1.6;min-width:180px}
+.leaflet-popup-tip-container{display:none}
+.leaflet-popup-close-button{color:var(--text-soft) !important;font-size:18px !important;top:8px !important;right:8px !important}
+.leaflet-control-zoom{border:1px solid var(--border) !important;box-shadow:var(--shadow) !important}
+.leaflet-control-zoom a{color:var(--text-mid) !important;background:var(--surface) !important}
+.leaflet-control-zoom a:hover{background:var(--surface2) !important}
+
+/* ── LOADING ── */
+#loader{position:fixed;inset:0;background:var(--blue-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;transition:opacity .6s}
+#loader .lmark{font-size:32px;font-weight:600;color:#fff;letter-spacing:2px}
+#loader .lmark span{color:var(--blue-light);font-weight:300}
+#loader .lsub{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:1px}
+.lbar-track{width:280px;height:3px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.lbar-fill{height:100%;background:var(--blue-light);border-radius:3px;width:0%;transition:width .3s}
+#lmsg{font-size:12px;color:rgba(255,255,255,.45);letter-spacing:.5px}
+
+/* ── MISC ── */
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+.scrollable{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scrollable::-webkit-scrollbar{width:4px}
+.scrollable::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="lmark">Aero<span>Watch</span></div>
+  <div class="lsub">INDIGO OPERATIONS CONTROL CENTER</div>
+  <div class="lbar-track"><div class="lbar-fill" id="lbar"></div></div>
+  <div id="lmsg">Initializing fleet data...</div>
+</div>
+
+<!-- SHELL -->
+<div id="shell" style="display:none">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M21 15l-9-9-4 4-5-3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M3 12l4-4 9 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".4"/></svg>
+      </div>
+      <div class="logo-text">Aero<span>Watch</span></div>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>Live Operations</div>
+    <div class="top-nav" id="top-nav">
+      <button class="tnav active" data-view="ops">Operations</button>
+      <button class="tnav" data-view="fleet">Fleet</button>
+      <button class="tnav" data-view="crew">Crew</button>
+      <button class="tnav" data-view="airports">Airports</button>
+      <button class="tnav" data-view="audit">Audit</button>
+    </div>
+    <button class="gear" onclick="toggleSettings()" title="Settings">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div id="main">
+
+    <!-- LEFT: DASHBOARD -->
+    <div id="left" class="scrollable">
+      <div class="section-label">Network Summary</div>
+      <div class="dash-grid">
+        <div class="kpi blue"><div class="kpi-val" id="k-total">300</div><div class="kpi-lbl">Aircraft Active</div><div class="kpi-sub" id="k-total-sub">IndiGo network</div></div>
+        <div class="kpi danger"><div class="kpi-val" id="k-disrupted">—</div><div class="kpi-lbl">Disrupted Flights</div><div class="kpi-sub" id="k-dis-sub">—</div></div>
+        <div class="kpi warn"><div class="kpi-val" id="k-delayed">—</div><div class="kpi-lbl">Delayed &lt;45min</div><div class="kpi-sub" id="k-del-sub">avg delay</div></div>
+        <div class="kpi danger"><div class="kpi-val" id="k-aog">—</div><div class="kpi-lbl">Aircraft on Ground</div><div class="kpi-sub" id="k-aog-sub">AOG events</div></div>
+        <div class="kpi warn"><div class="kpi-val" id="k-fdtl">—</div><div class="kpi-lbl">Crew Duty Alerts</div><div class="kpi-sub" id="k-fdtl-sub">near FDTL limit</div></div>
+        <div class="kpi ok"><div class="kpi-val" id="k-ontime">—</div><div class="kpi-lbl">On Time</div><div class="kpi-sub" id="k-ot-sub">departures</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Airport Ground Status</div>
+      <div class="airport-section" id="airport-section"></div>
+    </div>
+
+    <!-- CENTER: MAP + DETAIL + PROMPT -->
+    <div id="center">
+      <div id="map"></div>
+      <div id="bottom-panel">
+        <div id="flight-detail">
+          <div class="fd-header">
+            <div>
+              <div class="fd-flt" id="fd-flt">—</div>
+              <div class="fd-tail" id="fd-tail">—</div>
+            </div>
+            <button class="fd-close" onclick="closeFlightDetail()">×</button>
+          </div>
+          <div class="fd-grid" id="fd-grid"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Downstream Flight Chain — affected legs highlighted</div>
+          <div class="fd-chain" id="fd-chain"></div>
+          <div class="fd-actions">
+            <button class="btn-evaluate" onclick="openEvalFromFlight()">
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Evaluate Recovery Options
+            </button>
+            <button class="btn-dismiss" onclick="closeFlightDetail()">Dismiss</button>
+          </div>
+        </div>
+        <div id="scenario-area">
+          <textarea id="scenario-input" placeholder="Describe any disruption — e.g. VT-ANR nose-wheel failure in Phuket, or Delhi fog diverting 30 flights to Jaipur..."></textarea>
+          <button class="btn-eval-main" onclick="evaluateScenario()">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            Evaluate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RISK FEED -->
+    <div id="right">
+      <div class="section-label" style="padding-bottom:4px">Possible Disruptions</div>
+      <div class="feed-filters" id="feed-filters">
+        <div class="filter-pill active" data-filter="all">All</div>
+        <div class="filter-pill" data-filter="disrupted">Disrupted</div>
+        <div class="filter-pill" data-filter="delayed">Delayed</div>
+        <div class="filter-pill" data-filter="crew">Crew Alert</div>
+        <div class="filter-pill" data-filter="intl">International</div>
+      </div>
+      <div id="risk-list"></div>
+      <div class="feed-footer">
+        <span id="feed-count">— flights flagged</span>
+        <span id="feed-time">Updated just now</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVAL RESULTS OVERLAY -->
+  <div id="eval-results">
+    <div class="eval-close-bar">
+      <button class="eval-back" onclick="closeEval()">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Operations
+      </button>
+      <div>
+        <div class="eval-title" id="eval-title">Recovery Analysis</div>
+        <div class="eval-sub" id="eval-sub">—</div>
+      </div>
+    </div>
+    <div id="eval-banner"></div>
+    <div id="eval-meta" class="eval-meta"></div>
+    <div id="eval-options" class="eval-grid"></div>
+  </div>
+
+  <!-- TABLE OVERLAY -->
+  <div id="table-overlay">
+    <div class="tbl-hdr">
+      <div class="tbl-title" id="tbl-title">Database</div>
+      <button class="tbl-close" onclick="closeTable()">← Back to Operations</button>
+    </div>
+    <div id="table-content"></div>
+  </div>
+
+</div><!-- end shell -->
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal">
+  <div class="modal">
+    <h2>Configuration</h2>
+    <label>FlightRadar24 API Key</label>
+    <input type="password" placeholder="fr24-api-key" id="cfg-fr24">
+    <label>LLM Provider API Key</label>
+    <input type="password" placeholder="sk-..." id="cfg-llm">
+    <label>LLM Model</label>
+    <select id="cfg-model">
+      <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+      <option value="gpt-4o">GPT-4o</option>
+      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+    </select>
+    <label>Auto-refresh interval</label>
+    <select>
+      <option>Every 30 seconds</option>
+      <option>Every 60 seconds</option>
+      <option>Every 5 minutes</option>
+    </select>
+    <button class="modal-save" onclick="toggleSettings()">Save Configuration</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATIC DATA
+// ═══════════════════════════════════════════
+const AIRPORTS=[
+  {icao:'VIDP',iata:'DEL',name:'Indira Gandhi International',city:'Delhi',lat:28.5665,lng:77.1031,customs24:true,tug321:true,rwy:4430,type:'hub',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VABB',iata:'BOM',name:'Chhatrapati Shivaji Maharaj International',city:'Mumbai',lat:19.0896,lng:72.8656,customs24:true,tug321:true,rwy:3660,type:'hub',
+   curfew:'23:30–06:00',restrictions:['Noise abatement 22:00–07:00'],groundDelay:12,closingTime:null},
+  {icao:'VOMM',iata:'MAA',name:'Chennai International',city:'Chennai',lat:12.9941,lng:80.1709,customs24:true,tug321:true,rwy:3658,type:'hub',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VOBL',iata:'BLR',name:'Kempegowda International',city:'Bengaluru',lat:13.1986,lng:77.7066,customs24:true,tug321:true,rwy:4000,type:'hub',
+   curfew:null,restrictions:[],groundDelay:8,closingTime:null},
+  {icao:'VECC',iata:'CCU',name:'Netaji Subhas Chandra Bose International',city:'Kolkata',lat:22.6520,lng:88.4463,customs24:true,tug321:true,rwy:3627,type:'hub',
+   curfew:null,restrictions:[],groundDelay:5,closingTime:null},
+  {icao:'VOCI',iata:'COK',name:'Cochin International',city:'Kochi',lat:10.1520,lng:76.3919,customs24:false,tug321:true,rwy:3400,type:'major',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VOHY',iata:'HYD',name:'Rajiv Gandhi International',city:'Hyderabad',lat:17.2313,lng:78.4298,customs24:true,tug321:true,rwy:4260,type:'major',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VAAH',iata:'AMD',name:'Sardar Vallabhbhai Patel International',city:'Ahmedabad',lat:23.0771,lng:72.6347,customs24:false,tug321:true,rwy:3505,type:'major',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VIJP',iata:'JAI',name:'Jaipur International',city:'Jaipur',lat:26.8242,lng:75.8122,customs24:false,tug321:false,rwy:2742,type:'minor',
+   curfew:'22:00–05:30',restrictions:['No widebody','A321 ops restricted after 21:00'],groundDelay:0,closingTime:'22:00'},
+  {icao:'VELP',iata:'LKO',name:'Chaudhary Charan Singh International',city:'Lucknow',lat:26.7606,lng:80.8893,customs24:false,tug321:true,rwy:2745,type:'minor',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VIPT',iata:'IXC',name:'Chandigarh International',city:'Chandigarh',lat:30.6735,lng:76.7885,customs24:false,tug321:false,rwy:2742,type:'minor',
+   curfew:'22:00–05:00',restrictions:['IFR approaches only','No A321 ops'],groundDelay:0,closingTime:'22:00'},
+  {icao:'VEGK',iata:'GAU',name:'Lokpriya Gopinath Bordoloi International',city:'Guwahati',lat:26.1061,lng:91.5859,customs24:false,tug321:true,rwy:2900,type:'minor',
+   curfew:null,restrictions:['Mountain terrain — VFR restrictions'],groundDelay:0,closingTime:null},
+  {icao:'VIAR',iata:'ATQ',name:'Sri Guru Ram Dass Jee International',city:'Amritsar',lat:31.7096,lng:74.7973,customs24:false,tug321:true,rwy:3353,type:'major',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VAPN',iata:'PNQ',name:'Pune Airport',city:'Pune',lat:18.5821,lng:73.9197,customs24:false,tug321:true,rwy:2745,type:'major',
+   curfew:'22:00–06:00',restrictions:['Civilian ops share with IAF','Night ops restricted'],groundDelay:0,closingTime:'22:00'},
+  {icao:'VIGO',iata:'GOI',name:'Goa International (Dabolim)',city:'Goa',lat:15.3808,lng:73.8314,customs24:false,tug321:true,rwy:3310,type:'major',
+   curfew:null,restrictions:['IAF base — periodic closures'],groundDelay:0,closingTime:null},
+  {icao:'VIAG',iata:'AGR',name:'Agra Airport',city:'Agra',lat:27.1558,lng:77.9609,customs24:false,tug321:false,rwy:2752,type:'divert',
+   curfew:'21:00–06:00',restrictions:['No A321','No customs','Divert ops only after 21:00 restricted'],groundDelay:0,closingTime:'21:00'},
+  {icao:'VILH',iata:'IXL',name:'Kushok Bakula Rimpochhe Airport',city:'Leh',lat:34.1359,lng:77.5465,customs24:false,tug321:false,rwy:3380,type:'special',
+   curfew:null,restrictions:['Landings only 08:00–11:00 (thermals)','No night ops','High altitude 10,682ft — A321 not approved','Visual approaches only'],groundDelay:0,closingTime:'14:00'},
+  {icao:'VOPB',iata:'IXZ',name:'Veer Savarkar International',city:'Port Blair',lat:11.6412,lng:92.7297,customs24:false,tug321:false,rwy:2286,type:'minor',
+   curfew:null,restrictions:['Environmental restrictions','Max A320 size'],groundDelay:0,closingTime:null},
+  {icao:'VCBI',iata:'CMB',name:'Bandaranaike International',city:'Colombo',lat:7.1803,lng:79.8841,customs24:true,tug321:true,rwy:3350,type:'intl',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'WSSS',iata:'SIN',name:'Changi Airport',city:'Singapore',lat:1.3644,lng:103.9915,customs24:true,tug321:true,rwy:4000,type:'intl',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VTBS',iata:'BKK',name:'Suvarnabhumi International',city:'Bangkok',lat:13.6900,lng:100.7501,customs24:true,tug321:true,rwy:4000,type:'intl',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'OMDB',iata:'DXB',name:'Dubai International',city:'Dubai',lat:25.2532,lng:55.3657,customs24:true,tug321:true,rwy:4000,type:'intl',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VTSP',iata:'HKT',name:'Phuket International',city:'Phuket',lat:8.1132,lng:98.3017,customs24:true,tug321:true,rwy:3000,type:'intl',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VHHH',iata:'HKG',name:'Hong Kong International',city:'Hong Kong',lat:22.3080,lng:113.9185,customs24:true,tug321:true,rwy:3800,type:'intl',
+   curfew:null,restrictions:[],groundDelay:0,closingTime:null},
+  {icao:'VORY',iata:'UDR',name:'Maharana Pratap Airport',city:'Udaipur',lat:24.6177,lng:73.8961,customs24:false,tug321:false,rwy:1810,type:'minor',
+   curfew:null,restrictions:['Short runway — A320 max','Weight restrictions apply'],groundDelay:0,closingTime:null},
+  {icao:'VOJV',iata:'JDH',name:'Jodhpur Airport',city:'Jodhpur',lat:26.2511,lng:73.0488,customs24:false,tug321:false,rwy:2742,type:'minor',
+   curfew:null,restrictions:['IAF base'],groundDelay:0,closingTime:null},
+];
+
+const ROUTES=[
+  ['DEL','BOM'],['DEL','MAA'],['DEL','BLR'],['DEL','CCU'],['DEL','HYD'],['DEL','COK'],['DEL','AMD'],
+  ['DEL','JAI'],['DEL','LKO'],['DEL','ATQ'],['DEL','GAU'],['DEL','IXC'],['DEL','PNQ'],['DEL','GOI'],
+  ['DEL','IXL'],// Leh route!
+  ['BOM','MAA'],['BOM','BLR'],['BOM','HYD'],['BOM','COK'],['BOM','AMD'],['BOM','GOI'],['BOM','PNQ'],['BOM','JDH'],['BOM','UDR'],
+  ['MAA','BLR'],['MAA','HYD'],['MAA','COK'],['MAA','CCU'],['MAA','IXZ'],
+  ['BLR','HYD'],['BLR','COK'],['BLR','CCU'],['BLR','AMD'],
+  ['CCU','GAU'],
+  ['HYD','COK'],['HYD','AMD'],
+  ['DEL','SIN'],['DEL','BKK'],['DEL','DXB'],['DEL','HKG'],
+  ['BOM','DXB'],['BOM','SIN'],['BOM','CMB'],['BOM','HKT'],
+  ['MAA','CMB'],['MAA','SIN'],['BLR','SIN'],['BLR','DXB'],
+  ['CCU','HKG'],['HYD','SIN'],['COK','DXB'],['DEL','HKT'],
+];
+
+const RANKS=['Captain','First Officer','Senior First Officer'];
+const HUBS=['DEL','BOM','BLR','MAA','CCU','HYD'];
+
+// ═══════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════
+const rn=(a,b)=>Math.random()*(b-a)+a;
+const ri=(a,b)=>Math.floor(rn(a,b));
+const pick=a=>a[ri(0,a.length)];
+const fmtT=ms=>{const d=new Date(ms);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
+const apByIata=iata=>AIRPORTS.find(a=>a.iata===iata);
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let fleet=[], pilots=[], riskFeed=[], auditLog=[];
+let leafMap=null, markers=[];
+let selectedFlightId=null, activeFilter='all';
+
+// ═══════════════════════════════════════════
+// DATA GENERATION
+// ═══════════════════════════════════════════
+function genChain(fromAp, toAp, status){
+  const legs=[];
+  let prev=fromAp;
+  const hubAps=AIRPORTS.filter(a=>a.type==='hub');
+  for(let i=0;i<5;i++){
+    const next=i===0?toAp:pick(hubAps);
+    const dep=Date.now()+(i*7200+ri(-1200,1200))*1000;
+    const arr=dep+ri(60,185)*60000;
+    // Leh special scenario — afternoon departure blocked
+    const lehBlocked=next.iata==='IXL'&&(new Date(dep).getHours()>=13);
+    legs.push({
+      from:prev.iata,to:next.iata,
+      depStr:fmtT(dep),arrStr:fmtT(arr),
+      flt:'6E'+ri(100,9999),
+      affected:(i>0&&(status==='AOG'||status==='HIGH_RISK'))||lehBlocked,
+      lehBlocked,
+    });
+    prev=next;
+  }
+  return legs;
+}
+
+function buildFleet(){
+  const usedTails=new Set();
+  fleet=[];
+  const letters='ABCDEFGHIJKLMNPQRSTUVWXYZ'.split('');
+  for(let i=0;i<300;i++){
+    let tail;
+    do{tail='VT-'+pick(letters)+pick(letters)+pick(letters);}while(usedTails.has(tail));
+    usedTails.add(tail);
+    const type=i<180?'A320neo':i<240?'A320ceo':i<285?'A321neo':'ATR 72';
+    const route=pick(ROUTES);
+    const fromAp=apByIata(route[0])||AIRPORTS[0];
+    const toAp=apByIata(route[1])||AIRPORTS[1];
+    const isIntl=fromAp.type==='intl'||toAp.type==='intl';
+    const prog=rn(0.05,0.95);
+    const lat=fromAp.lat+(toAp.lat-fromAp.lat)*prog+rn(-0.3,0.3);
+    const lng=fromAp.lng+(toAp.lng-fromAp.lng)*prog+rn(-0.3,0.3);
+    const roll=Math.random();
+    let status,delayMin=0;
+    if(roll<0.03){status='AOG';delayMin=999;}
+    else if(roll<0.09){status='HIGH_RISK';delayMin=ri(60,240);}
+    else if(roll<0.22){status='DELAYED';delayMin=ri(15,58);}
+    else{status='ON_TIME';}
+    const ripple=status==='AOG'?ri(4,8):status==='HIGH_RISK'?ri(2,5):status==='DELAYED'?ri(0,3):0;
+    fleet.push({
+      id:i,tail,type,
+      from:fromAp.iata,to:toAp.iata,
+      fromCity:fromAp.city,toCity:toAp.city,
+      fromLat:fromAp.lat,fromLng:fromAp.lng,
+      toLat:toAp.lat,toLng:toAp.lng,
+      lat,lng,progress:prog,
+      status,delayMin,ripple,isIntl,
+      flightNo:'6E'+ri(100,9999),
+      pax:ri(148,226),
+      pilotId:null,
+      etops:type==='A321neo'&&Math.random()>.4,
+      nextMx:new Date(Date.now()+ri(1,120)*86400000).toISOString().split('T')[0],
+      city:prog<0.5?fromAp.iata:toAp.iata,
+      chain:genChain(fromAp,toAp,status),
+      heading:Math.atan2(toAp.lng-fromAp.lng,toAp.lat-fromAp.lat)*(180/Math.PI),
+    });
+  }
+}
+
+function buildPilots(){
+  pilots=[];
+  for(let i=0;i<1000;i++){
+    const base=pick(HUBS);
+    const onDuty=Math.random()>.45;
+    const dutyRem=onDuty?ri(0,480):480;
+    pilots.push({
+      id:i,pid:'PLT'+String(i).padStart(4,'0'),
+      rank:pick(RANKS),base,
+      curLoc:(Math.random()>.35?apByIata(base):pick(AIRPORTS))?.iata||base,
+      dutyRem,onDuty,
+      nightLandings:ri(40,450),
+      qualified:Math.random()>.08,
+      fdtlAlert:onDuty&&dutyRem<60,
+      fdtlCrit:onDuty&&dutyRem<20,
+      type320:true,type321:Math.random()>.3,typeATR:Math.random()>.55,
+      tailId:null,
+    });
+  }
+  fleet.forEach(f=>{
+    const avail=pilots.filter(p=>p.qualified&&p.dutyRem>60&&!p.tailId&&!p.fdtlAlert);
+    if(avail.length){const p=pick(avail);p.tailId=f.tail;f.pilotId=p.pid;}
+  });
+}
+
+function buildRiskFeed(){
+  riskFeed=fleet
+    .filter(f=>f.status!=='ON_TIME'||(f.isIntl&&f.delayMin>0))
+    .map(f=>{
+      const pilot=f.pilotId?pilots.find(p=>p.pid===f.pilotId):null;
+      return {...f,hasFdtl:pilot&&(pilot.fdtlAlert||pilot.fdtlCrit),pilotDuty:pilot?.dutyRem??null};
+    })
+    .sort((a,b)=>{
+      const w=f=>f.status==='AOG'?100:(f.status==='HIGH_RISK'?50:0)+(f.isIntl?30:0)+(f.hasFdtl?20:0)+(f.ripple*3);
+      return w(b)-w(a);
+    });
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD KPIs
+// ═══════════════════════════════════════════
+function updateKpis(){
+  const aog=fleet.filter(f=>f.status==='AOG');
+  const hi=fleet.filter(f=>f.status==='HIGH_RISK');
+  const delayed=fleet.filter(f=>f.status==='DELAYED');
+  const onTime=fleet.filter(f=>f.status==='ON_TIME');
+  const fdtlAlerts=pilots.filter(p=>p.fdtlAlert||p.fdtlCrit);
+  const avgDelay=delayed.length?Math.round(delayed.reduce((s,f)=>s+f.delayMin,0)/delayed.length):0;
+  document.getElementById('k-total').textContent='300';
+  document.getElementById('k-total-sub').textContent=ROUTES.length+' active routes';
+  document.getElementById('k-disrupted').textContent=aog.length+hi.length;
+  document.getElementById('k-dis-sub').textContent=aog.length+' AOG + '+hi.length+' high risk';
+  document.getElementById('k-delayed').textContent=delayed.length;
+  document.getElementById('k-del-sub').textContent='avg '+avgDelay+'min delay';
+  document.getElementById('k-aog').textContent=aog.length;
+  document.getElementById('k-aog-sub').textContent=aog.length>0?'immediate action needed':'all clear';
+  document.getElementById('k-fdtl').textContent=fdtlAlerts.length;
+  document.getElementById('k-fdtl-sub').textContent=pilots.filter(p=>p.fdtlCrit).length+' critical';
+  document.getElementById('k-ontime').textContent=onTime.length;
+  document.getElementById('k-ot-sub').textContent=Math.round(onTime.length/300*100)+'% of fleet';
+}
+
+// ═══════════════════════════════════════════
+// AIRPORT GROUND STATUS
+// ═══════════════════════════════════════════
+function renderAirports(){
+  const sec=document.getElementById('airport-section');
+  const mainAps=AIRPORTS.filter(a=>a.type==='hub'||a.type==='major'||a.type==='special');
+  const now=new Date();
+  const nowMins=now.getHours()*60+now.getMinutes();
+  sec.innerHTML=mainAps.map(a=>{
+    const diverted=fleet.filter(f=>f.to===a.iata&&f.status==='HIGH_RISK'&&f.isIntl===false).length;
+    const tags=[];
+    if(a.groundDelay>0) tags.push(`<span class="atag warn">Ground delay ${a.groundDelay}min</span>`);
+    if(a.curfew) tags.push(`<span class="atag warn">Curfew ${a.curfew}</span>`);
+    if(a.closingTime) tags.push(`<span class="atag danger">Closes ${a.closingTime}</span>`);
+    if(diverted>0) tags.push(`<span class="atag danger">${diverted} diverted</span>`);
+    if(a.restrictions.length>0) tags.push(`<span class="atag info">${a.restrictions[0]}</span>`);
+    const status=a.groundDelay>0||diverted>0?'warn':a.closingTime?'danger':'ok';
+    const statusDot=status==='ok'?'var(--ok)':status==='warn'?'var(--warn)':'var(--danger)';
+    return `<div class="airport-card">
+      <div class="airport-name"><span><span class="dot" style="background:${statusDot}"></span>${a.iata} · ${a.city}</span><span style="font-size:10px;color:var(--text-muted);font-weight:400">${a.rwy}m rwy</span></div>
+      <div class="airport-detail">${a.name}</div>
+      ${tags.length?`<div class="airport-row">${tags.join('')}</div>`:'<div class="airport-row"><span class="atag ok">Ops normal</span></div>'}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// RISK FEED
+// ═══════════════════════════════════════════
+function renderRiskFeed(){
+  const list=document.getElementById('risk-list');
+  let items=riskFeed;
+  if(activeFilter==='disrupted') items=items.filter(f=>f.status==='AOG'||f.status==='HIGH_RISK');
+  else if(activeFilter==='delayed') items=items.filter(f=>f.status==='DELAYED');
+  else if(activeFilter==='crew') items=items.filter(f=>f.hasFdtl);
+  else if(activeFilter==='intl') items=items.filter(f=>f.isIntl);
+
+  list.innerHTML=items.slice(0,80).map(f=>{
+    const isDisrupted=f.status==='AOG'||f.status==='HIGH_RISK';
+    const statusLabel=f.status==='AOG'?'Disrupted':f.status==='HIGH_RISK'?'Disrupted':'Delayed';
+    const statusClass=isDisrupted?'disrupted':f.status==='DELAYED'?'delayed':'monitoring';
+    const tags=[];
+    if(f.status==='AOG') tags.push('<span class="ri-tag hot">Aircraft on Ground</span>');
+    if(f.delayMin>0&&f.delayMin<999) tags.push(`<span class="ri-tag med">Delay: +${f.delayMin}min</span>`);
+    if(f.ripple>0) tags.push(`<span class="ri-tag med">${f.ripple} downstream legs affected</span>`);
+    if(f.hasFdtl) tags.push('<span class="ri-tag hot">Crew duty limit</span>');
+    if(f.isIntl) tags.push('<span class="ri-tag cool">International</span>');
+    return `<div class="risk-item${f.id===selectedFlightId?' selected':''}" onclick="selectFlight(${f.id})">
+      <div class="ri-top">
+        <span class="ri-flt">${f.flightNo} &middot; ${f.tail}</span>
+        <span class="ri-status ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="ri-route">${f.fromCity} → ${f.toCity} &middot; ${f.pax} pax &middot; ${f.type}</div>
+      <div class="ri-tags">${tags.join('')}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('feed-count').textContent=items.length+' flights flagged';
+  document.getElementById('feed-time').textContent='Updated '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ═══════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════
+const PLANE_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="COLOR"/>
+</svg>`;
+
+function makePlaneIcon(color){
+  const svg=PLANE_SVG.replace('COLOR',color);
+  return L.divIcon({
+    html:`<div style="transform:rotate(VANGLEdeg)">${svg}</div>`,
+    className:'',
+    iconSize:[20,20],
+    iconAnchor:[10,10],
+  });
+}
+
+function planeColor(f){
+  if(f.status==='AOG') return '#DC2626';
+  if(f.status==='HIGH_RISK') return '#D97706';
+  if(f.isIntl&&f.delayMin>0) return '#1D4ED8';
+  if(f.status==='DELAYED') return '#D97706';
+  return '#16A34A';
+}
+
+function initMap(){
+  leafMap=L.map('map',{
+    center:[20,79],zoom:5,
+    zoomControl:true,
+    attributionControl:false,
+    preferCanvas:true,
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:18,subdomains:'abcd'}).addTo(leafMap);
+  // Routes
+  ROUTES.forEach(r=>{
+    const a=apByIata(r[0]),b=apByIata(r[1]);
+    if(a&&b) L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{color:'rgba(74,144,217,0.15)',weight:1}).addTo(leafMap);
+  });
+  // Hub markers
+  AIRPORTS.filter(a=>a.type==='hub').forEach(a=>{
+    L.circleMarker([a.lat,a.lng],{radius:5,color:'#4A90D9',fillColor:'#0A2240',fillOpacity:1,weight:2}).addTo(leafMap)
+      .bindTooltip(`<strong>${a.iata}</strong> ${a.city}`,{permanent:false,direction:'top'});
+  });
+  // Aircraft
+  fleet.forEach(f=>addFlightMarker(f));
+}
+
+function addFlightMarker(f){
+  const color=planeColor(f);
+  const angle=f.heading||0;
+  const svgHtml=PLANE_SVG.replace('COLOR',color).replace('VANgle',angle);
+  const icon=L.divIcon({
+    html:`<div title="${f.flightNo} ${f.tail}" style="transform:rotate(${angle}deg);filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">${PLANE_SVG.replace('COLOR',color)}</div>`,
+    className:'',iconSize:[20,20],iconAnchor:[10,10],
+  });
+  const m=L.marker([f.lat,f.lng],{icon}).addTo(leafMap);
+  m.on('click',()=>selectFlight(f.id));
+  markers.push({id:f.id,marker:m,color});
+}
+
+function updateMarkerColor(f){
+  const entry=markers.find(x=>x.id===f.id);
+  if(!entry) return;
+  const color=planeColor(f);
+  if(color===entry.color) return;
+  const angle=f.heading||0;
+  const icon=L.divIcon({
+    html:`<div title="${f.flightNo} ${f.tail}" style="transform:rotate(${angle}deg);filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">${PLANE_SVG.replace('COLOR',color)}</div>`,
+    className:'',iconSize:[20,20],iconAnchor:[10,10],
+  });
+  entry.marker.setIcon(icon);
+  entry.color=color;
+}
+
+// ═══════════════════════════════════════════
+// FLIGHT SELECTION & DETAIL
+// ═══════════════════════════════════════════
+function selectFlight(id){
+  selectedFlightId=id;
+  const f=fleet.find(x=>x.id===id);
+  if(!f) return;
+  renderRiskFeed();
+  showFlightDetail(f);
+  leafMap.setView([f.lat,f.lng],6,{animate:true,duration:.6});
+  addAudit('FLIGHT SELECTED',`${f.flightNo} ${f.tail} — ${f.fromCity} → ${f.toCity}`);
+}
+
+function showFlightDetail(f){
+  const pilot=f.pilotId?pilots.find(p=>p.pid===f.pilotId):null;
+  document.getElementById('fd-flt').textContent=`${f.flightNo} · ${f.fromCity} → ${f.toCity}`;
+  const statusTxt=f.status==='AOG'?'Aircraft on Ground (AOG)':f.status==='HIGH_RISK'?`High Risk — ${f.delayMin}min delay`:f.status==='DELAYED'?`Delayed ${f.delayMin}min`:'On Time';
+  const statusCol=f.status==='AOG'?'var(--danger)':f.status==='HIGH_RISK'?'var(--warn)':f.status==='DELAYED'?'var(--warn)':'var(--ok)';
+  document.getElementById('fd-tail').innerHTML=`${f.tail} &middot; ${f.type} &middot; <span style="color:${statusCol};font-weight:600">${statusTxt}</span>`;
+  const grid=document.getElementById('fd-grid');
+  const items=[
+    {l:'Passengers on Board',v:f.pax+' pax'},
+    {l:'Affected Downstream',v:f.ripple>0?f.ripple+' flights':'-'},
+    {l:'Crew Duty Remaining',v:pilot?(pilot.fdtlCrit?`<span style="color:var(--danger);font-weight:600">${pilot.dutyRem}min — Critical</span>`:pilot.fdtlAlert?`<span style="color:var(--warn);font-weight:600">${pilot.dutyRem}min — Alert</span>`:`${pilot.dutyRem}min`):'Unassigned'},
+    {l:'Route Type',v:f.isIntl?'International':'Domestic'},
+  ];
+  grid.innerHTML=items.map(i=>`<div class="fd-cell"><div class="fd-cell-lbl">${i.l}</div><div class="fd-cell-val">${i.v}</div></div>`).join('');
+  // Chain
+  const chain=document.getElementById('fd-chain');
+  let html='';
+  if(f.chain&&f.chain.length){
+    f.chain.forEach((leg,i)=>{
+      const cls=leg.affected?'chain-affected':'';
+      const fromAp=apByIata(leg.from);
+      const hasLehRestriction=leg.to==='IXL';
+      html+=`<div class="chain-leg"><div class="chain-airport ${cls}"><div class="chain-iata">${leg.from}</div><div class="chain-time">${leg.depStr}</div></div>`;
+      html+=`<div class="chain-line"></div><div class="chain-arrow">→</div><div class="chain-line"></div>`;
+      const note=hasLehRestriction?`<div style="font-size:9px;color:var(--danger);white-space:nowrap">Leh: landings 08–11h only</div>`:'';
+      html+=`<div class="chain-airport ${leg.affected?'chain-affected':''}"><div class="chain-iata">${leg.to}</div><div class="chain-time">${leg.arrStr}</div>${note}</div>`;
+    });
+  }
+  chain.innerHTML=html;
+  document.getElementById('flight-detail').style.display='block';
+}
+
+function closeFlightDetail(){
+  document.getElementById('flight-detail').style.display='none';
+  selectedFlightId=null;
+  renderRiskFeed();
+}
+
+function openEvalFromFlight(){
+  const f=fleet.find(x=>x.id===selectedFlightId);
+  if(!f) return;
+  const desc=f.status==='AOG'
+    ?`${f.tail} is grounded (AOG) at ${f.toCity}. Flight ${f.flightNo} cannot continue. ${f.pax} passengers on board. ${f.ripple} downstream legs affected.`
+    :f.status==='HIGH_RISK'
+    ?`${f.tail} flight ${f.flightNo} is ${f.delayMin}min delayed en route ${f.fromCity} to ${f.toCity}. ${f.pax} passengers. ${f.ripple} connecting flights at risk.`
+    :`${f.tail} flight ${f.flightNo} is ${f.delayMin}min delayed on ${f.fromCity}–${f.toCity}.`;
+  document.getElementById('scenario-input').value=desc;
+  closeFlightDetail();
+  evaluateScenario();
+}
+
+// ═══════════════════════════════════════════
+// SCENARIO EVALUATOR
+// ═══════════════════════════════════════════
+function evaluateScenario(){
+  const input=document.getElementById('scenario-input').value.trim();
+  if(!input) return;
+  addAudit('EVALUATION TRIGGERED',input.substring(0,80));
+  const tailMatch=input.match(/VT-[A-Z]{3}/i);
+  const tail=tailMatch?tailMatch[0].toUpperCase():'VT-ANR';
+  const locMatch=input.match(/\b(Phuket|Delhi|Mumbai|Bengaluru|Bangalore|Chennai|Dubai|Singapore|Bangkok|Kolkata|Guwahati|Jaipur|Agra|Leh|Port Blair|Kochi)\b/i);
+  const loc=locMatch?locMatch[0]:'onward station';
+  const isAOG=/aog|grounded|failure|damage|nose.wheel|bird.strike|engine|technical/i.test(input);
+  const isFog=/fog|divert|weather|visibility|ground.stop/i.test(input);
+  const isEtops=/etops|regulatory|certification|u.turn/i.test(input);
+  const isIntl=/phuket|singapore|dubai|bangkok|hong.kong|international|colombo/i.test(input);
+  const isFDTL=/crew|duty|fdtl|timed.out|rest/i.test(input);
+  const targetF=fleet.find(x=>x.tail===tail);
+  const pax=targetF?.pax||ri(160,210);
+  if(isAOG&&targetF){targetF.status='AOG';targetF.delayMin=999;buildRiskFeed();renderRiskFeed();updateKpis();addAudit('AOG DECLARED',`${tail} flagged AOG at ${loc}`);}
+
+  // Eval title
+  document.getElementById('eval-title').textContent=
+    isAOG?`AOG Recovery — ${tail} at ${loc}`:
+    isFog?`Weather Disruption — Ground Hold & Diversions`:
+    isEtops?`Regulatory Compliance — Aircraft Certification Issue`:
+    isFDTL?`Crew Duty Limit — FDTL Management`:
+    `Disruption Analysis — ${tail}`;
+  document.getElementById('eval-sub').textContent=
+    `${pax} passengers affected · ${(targetF?.ripple||ri(2,5))} downstream legs · ${isIntl?'International route':'Domestic route'}`;
+
+  // Banner
+  const bannerIcon=`<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  document.getElementById('eval-banner').innerHTML=`<div class="disruption-banner">${bannerIcon}<div>
+    <div class="title">${isAOG?'Aircraft on Ground — Immediate Action Required':isFog?'Ground Stop / Diversion Event':isEtops?'Regulatory Non-Compliance — Flight Grounded':isFDTL?'Crew Duty Limit Breach':'Delay Escalation Risk'}</div>
+    <div class="desc">${isAOG?`${tail} is unable to continue operations at ${loc}. The aircraft requires maintenance clearance before next departure. ${pax} passengers are being held at the terminal.`:
+    isFog?`Low visibility conditions have resulted in ground holds and multiple diversions. Crews are accumulating duty time at off-base locations and may be unable to operate return sectors.`:
+    isEtops?`Aircraft certification mismatch detected. The flight is grounded pending regulatory clearance from DGCA. Affected passengers cannot deplane at transit point without visa implications.`:
+    isFDTL?`Crew duty hours are approaching or have exceeded DGCA-mandated limits. Replacement crew must be positioned before any further operations are permissible.`:
+    `Ongoing delay of ${targetF?.delayMin||'—'}min risks cascading into ${targetF?.ripple||2} downstream connections. Passengers with onward bookings are at risk of missing connections.`}</div>
+  </div></div>`;
+
+  // Meta stats
+  const lehWarning=input.toLowerCase().includes('leh')||targetF?.chain?.some(l=>l.to==='IXL');
+  document.getElementById('eval-meta').innerHTML=`
+    <div class="eval-meta-cell"><div class="val">${pax}</div><div class="lbl">Passengers Affected</div></div>
+    <div class="eval-meta-cell"><div class="val">${targetF?.ripple||ri(2,5)}</div><div class="lbl">Downstream Legs at Risk</div></div>
+    <div class="eval-meta-cell"><div class="val">${isAOG?'12–18h':isFog?'4–8h':'2–5h'}</div><div class="lbl">Estimated Recovery Time</div></div>
+    <div class="eval-meta-cell"><div class="val">${isIntl?'Intl':'Domestic'}</div><div class="lbl">Route Classification</div></div>
+    ${lehWarning?`<div class="eval-meta-cell" style="grid-column:1/-1;background:var(--warn-bg);border-color:var(--warn-border)"><div class="val" style="color:var(--warn);font-size:14px">⚠ Leh Landing Window: 08:00–11:00 only</div><div class="lbl">Any rescheduled Leh sector must depart before 08:30. Post-11:00 attempts will be denied. Plan accordingly.</div></div>`:''}
+  `;
+
+  // Options — no competitor airline names, realistic choices
+  const nearbySpare=fleet.filter(x=>x.status==='ON_TIME'&&x.type===( targetF?.type||'A320neo')&&['DEL','BOM','BLR','MAA','SIN'].includes(x.city)).slice(0,1)[0];
+  const availPilot=pilots.filter(p=>p.qualified&&p.dutyRem>200&&!p.fdtlAlert&&!p.fdtlCrit).slice(0,1)[0];
+  document.getElementById('eval-options').innerHTML=`
+    <div class="eval-card">
+      <div class="eval-card-hdr opt1"><h3>Option A — Deploy Spare Aircraft</h3><p>Highest reliability, protects all downstream legs</p></div>
+      <div class="eval-card-body">
+        ${nearbySpare?`Position spare tail <strong>${nearbySpare.tail}</strong> (${nearbySpare.type}) from <strong>${nearbySpare.city}</strong> to ${loc}. `:'Identify available spare from nearest IndiGo base. '}
+        ${availPilot?`Assign <strong>${availPilot.rank} ${availPilot.pid}</strong> with ${availPilot.dutyRem}min duty remaining. `:'Crew rostering to confirm eligible pilot pair. '}
+        Ferry sector required before passenger operation can commence. All <strong>${pax} passengers</strong> depart ${isAOG?'3–5h':'1–2h'} behind original schedule.
+        ${isIntl?' Immigration hold coordinated with local airport authority — no additional visa complications.':''}
+        Downstream chain resumes on schedule from next sector onwards.
+      </div>
+    </div>
+    <div class="eval-card">
+      <div class="eval-card-hdr opt2"><h3>Option B — Rebook &amp; Next Service</h3><p>Lowest disruption cost, longer wait for passengers</p></div>
+      <div class="eval-card-body">
+        Cancel current sector. Accommodate <strong>${pax} passengers</strong> across the next <strong>${ri(2,3)} departures</strong> on the same route (earliest available: ${ri(3,7)}h). 
+        ${isIntl?'Passengers who have cleared immigration require airside holding and coordinated hotel arrangement — <strong>no re-immigration required</strong> if held airside.':'Hotel and meal vouchers issued for delays exceeding 3 hours per DGCA guidelines.'}
+        ${isAOG?`AOG team dispatched to ${loc} with required components. Aircraft released for ferry after clearance. No commercial operation until maintenance sign-off.`:'Delay absorbed within the rotation — no further cascading impact.'}
+        ${targetF?.chain?.some(l=>l.to==='IXL')?'<strong>Note:</strong> Any rebooked passenger connecting to Leh must be on first available morning service — Leh airport permits landings until 11:00 only.':''}
+      </div>
+    </div>
+    <div class="eval-card">
+      <div class="eval-card-hdr opt3"><h3>Option C — Charter or Partial Recovery</h3><p>Best outcome for high-value and connecting passengers</p></div>
+      <div class="eval-card-body">
+        Arrange a <strong>charter operation</strong> for priority passengers — unaccompanied minors, medical cases, and passengers with same-day international connections — on the earliest possible slot.
+        Remaining passengers held for next scheduled service.
+        ${isIntl?'Transit passengers with visa restrictions cannot deplane — coordination with ground handler and immigration required immediately. Catering resupply to aircraft within 90 minutes.':'Station manager to coordinate priority passenger identification at gate.'}
+        ${isEtops?'<strong>Regulatory note:</strong> DGCA notification of aircraft certification mismatch filed. Replacement aircraft must hold appropriate certification before re-assigning to this route.':''}
+        ${isFog?`Crew positioning: pilots currently at divert airports (Jaipur/Agra) are accumulating duty time. Relief crew to be dispatched from <strong>DEL</strong> by surface transport to meet minimum rest requirements before next operation.`:''}
+      </div>
+    </div>
+  `;
+
+  addAudit('OPTIONS GENERATED',`${tail} @ ${loc}: 3 recovery options evaluated. Pax: ${pax}. Downstream: ${targetF?.ripple||'—'} legs.`);
+  document.getElementById('eval-results').style.display='block';
+  window.scrollTo(0,0);
+}
+
+function closeEval(){
+  document.getElementById('eval-results').style.display='none';
+}
+
+// ═══════════════════════════════════════════
+// TABLE VIEWS
+// ═══════════════════════════════════════════
+function showTable(type){
+  document.getElementById('shell').classList.add('table-open');
+  document.getElementById('map').classList.add('locked');
+  document.getElementById('table-overlay').style.display='block';
+  document.getElementById('tbl-title').textContent={fleet:'Fleet Database',crew:'Crew & Duty Status',airports:'Airport Operations',audit:'Audit Log'}[type]||type;
+  addAudit('VIEW',type.toUpperCase()+' database accessed');
+  let html='';
+  if(type==='fleet'){
+    html=`<table><thead><tr><th>Tail</th><th>Flight</th><th>Type</th><th>From</th><th>To</th><th>Status</th><th>Delay</th><th>Affected Legs</th><th>Passengers</th><th>Next MX</th></tr></thead><tbody>`;
+    html+=fleet.map(f=>{
+      const sc=f.status==='AOG'?'danger':f.status==='HIGH_RISK'?'warn':f.status==='DELAYED'?'warn':'ok';
+      const dl=f.delayMin>0&&f.delayMin<999?'+'+f.delayMin+'min':f.delayMin===999?'Grounded':'—';
+      return `<tr><td class="strong">${f.tail}</td><td>${f.flightNo}</td><td>${f.type}</td><td>${f.from}</td><td>${f.to}</td>
+        <td><span class="badge ${sc}">${f.status==='ON_TIME'?'On Time':f.status==='AOG'?'AOG':f.status==='HIGH_RISK'?'High Risk':'Delayed'}</span></td>
+        <td>${dl}</td><td>${f.ripple||'—'}</td><td>${f.pax}</td><td>${f.nextMx}</td></tr>`;
+    }).join('');
+    html+='</tbody></table>';
+  } else if(type==='crew'){
+    html=`<table><thead><tr><th>Pilot ID</th><th>Rank</th><th>Base</th><th>Current Location</th><th>Duty Remaining</th><th>Status</th><th>Night Landings</th><th>A320</th><th>A321</th></tr></thead><tbody>`;
+    html+=pilots.map(p=>{
+      const sc=p.fdtlCrit?'danger':p.fdtlAlert?'warn':p.onDuty?'ok':'';
+      const lbl=p.fdtlCrit?'Critical':p.fdtlAlert?'Duty Alert':p.onDuty?'Active':'Off Duty';
+      const barColor=p.fdtlCrit?'var(--danger)':p.fdtlAlert?'var(--warn)':'var(--ok)';
+      const pct=Math.min(100,Math.round(p.dutyRem/480*100));
+      return `<tr><td class="strong">${p.pid}</td><td>${p.rank}</td><td>${p.base}</td><td>${p.curLoc}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor}"></div></div><span style="color:${barColor};font-size:12px">${p.dutyRem}min</span></div></td>
+        <td>${sc?`<span class="badge ${sc}">${lbl}</span>`:lbl}</td>
+        <td>${p.nightLandings}</td><td>${p.type320?'✓':'—'}</td><td>${p.type321?'✓':'—'}</td></tr>`;
+    }).join('');
+    html+='</tbody></table>';
+  } else if(type==='airports'){
+    html=`<table><thead><tr><th>ICAO</th><th>IATA</th><th>City</th><th>Type</th><th>Curfew</th><th>Closing Time</th><th>A321 Tug</th><th>Customs 24/7</th><th>Runway (m)</th><th>Restrictions</th></tr></thead><tbody>`;
+    html+=AIRPORTS.map(a=>`<tr>
+      <td class="strong">${a.icao}</td><td class="strong">${a.iata}</td><td>${a.city}</td>
+      <td><span class="badge ${a.type==='hub'?'blue':a.type==='intl'?'info':a.type==='special'?'danger':'ok'}">${a.type}</span></td>
+      <td>${a.curfew?`<span class="badge warn">${a.curfew}</span>`:'—'}</td>
+      <td>${a.closingTime?`<span class="badge danger">${a.closingTime}</span>`:'24h ops'}</td>
+      <td>${a.tug321?'<span class="badge ok">Yes</span>':'<span class="badge danger">No</span>'}</td>
+      <td>${a.customs24?'<span class="badge ok">24/7</span>':'<span class="badge warn">Limited</span>'}</td>
+      <td>${a.rwy}</td>
+      <td style="font-size:11px;max-width:200px;white-space:normal">${a.restrictions.join('; ')||'—'}</td>
+    </tr>`).join('');
+    html+='</tbody></table>';
+  } else if(type==='audit'){
+    html=`<table><thead><tr><th>Time</th><th>Action</th><th>Detail</th></tr></thead><tbody>`;
+    html+=auditLog.map(e=>`<tr><td class="strong" style="font-size:11px">${e.ts}</td><td style="font-weight:600;color:var(--text)">${e.action}</td><td>${e.detail}</td></tr>`).join('');
+    html+='</tbody></table>';
+  }
+  document.getElementById('table-content').innerHTML=html;
+}
+
+function closeTable(){
+  document.getElementById('table-overlay').style.display='none';
+  document.getElementById('shell').classList.remove('table-open');
+  document.getElementById('map').classList.remove('locked');
+  document.querySelectorAll('.tnav').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tnav[data-view="ops"]').classList.add('active');
+  if(leafMap) setTimeout(()=>leafMap.invalidateSize(),0);
+}
+
+// ═══════════════════════════════════════════
+// AUDIT
+// ═══════════════════════════════════════════
+function addAudit(action,detail){
+  const d=new Date();
+  const ts=d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  auditLog.unshift({ts,action,detail});
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+function toggleSettings(){
+  document.getElementById('settings-modal').classList.toggle('open');
+}
+document.getElementById('settings-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)toggleSettings();});
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+document.getElementById('top-nav').addEventListener('click',e=>{
+  if(!e.target.classList.contains('tnav')) return;
+  document.querySelectorAll('.tnav').forEach(t=>t.classList.remove('active'));
+  e.target.classList.add('active');
+  const v=e.target.dataset.view;
+  if(v==='ops') closeTable();
+  else showTable(v==='fleet'?'fleet':v==='crew'?'crew':v==='airports'?'airports':'audit');
+});
+
+// Feed filters
+document.getElementById('feed-filters').addEventListener('click',e=>{
+  const pill=e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');
+  activeFilter=pill.dataset.filter;
+  renderRiskFeed();
+});
+
+// ═══════════════════════════════════════════
+// LIVE UPDATES
+// ═══════════════════════════════════════════
+function tick(){
+  // Move planes
+  fleet.filter(f=>f.status!=='AOG').slice(0,10).forEach(f=>{
+    f.progress=Math.min(1,f.progress+rn(0.002,0.010));
+    f.lat=f.fromLat+(f.toLat-f.fromLat)*f.progress+rn(-0.05,0.05);
+    f.lng=f.fromLng+(f.toLng-f.fromLng)*f.progress+rn(-0.05,0.05);
+    const entry=markers.find(x=>x.id===f.id);
+    if(entry) entry.marker.setLatLng([f.lat,f.lng]);
+    updateMarkerColor(f);
+  });
+  // Tick duty clocks
+  pilots.filter(p=>p.onDuty&&p.dutyRem>0).slice(0,25).forEach(p=>{
+    p.dutyRem=Math.max(0,p.dutyRem-1);
+    p.fdtlAlert=p.onDuty&&p.dutyRem<60;
+    p.fdtlCrit=p.onDuty&&p.dutyRem<20;
+  });
+  buildRiskFeed();
+  renderRiskFeed();
+  updateKpis();
+}
+
+// ═══════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════
+async function setLoad(pct,msg){
+  document.getElementById('lbar').style.width=pct+'%';
+  document.getElementById('lmsg').textContent=msg;
+  await new Promise(r=>setTimeout(r,260));
+}
+
+async function boot(){
+  await setLoad(15,'Generating IndiGo fleet data (300 aircraft)...');
+  buildFleet();
+  await setLoad(40,'Building crew roster (1,000 pilots, FDTL records)...');
+  buildPilots();
+  await setLoad(65,'Calculating network risk...');
+  buildRiskFeed();
+  await setLoad(80,'Rendering operations dashboard...');
+  document.getElementById('loader').style.opacity='0';
+  setTimeout(()=>document.getElementById('loader').style.display='none',600);
+  document.getElementById('shell').style.display='grid';
+  updateKpis();
+  renderRiskFeed();
+  renderAirports();
+  await setLoad(95,'Loading network map...');
+  initMap();
+  await setLoad(100,'');
+  addAudit('SYSTEM READY','Aero-Watch OCC initialized. Fleet: 300 | Pilots: 1,000 | Disrupted: '+fleet.filter(f=>f.status!=='ON_TIME').length);
+  setInterval(tick,5000);
+}
+
+boot();
+</script>
+</body>
+</html>

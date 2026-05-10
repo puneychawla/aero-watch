@@ -262,6 +262,40 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
 .option-select-btn{display:block;width:100%;margin-top:10px;padding:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;text-align:center}
 .option-select-btn:hover{background:var(--blue-ghost);border-color:var(--blue-light);color:var(--blue-soft)}
 .option-select-btn.chosen{background:var(--blue-dark);color:#fff;border-color:var(--blue-dark)}
+
+/* ── PLAN ── */
+.plan-month-item{padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;border:1px solid transparent;margin-bottom:4px;font-size:13px;font-weight:500;color:var(--text-mid)}
+.plan-month-item:hover{background:var(--blue-ghost);color:var(--text)}
+.plan-month-item.active{background:var(--blue-pale);border-color:var(--blue-light);color:var(--blue-soft)}
+.plan-month-item.has-roster{color:var(--text)}
+.plan-roster-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.plan-opt-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:box-shadow .18s,border-color .18s}
+.plan-opt-card:hover{box-shadow:var(--shadow-md)}
+.plan-opt-card.selected{border-color:var(--blue-soft);box-shadow:0 0 0 3px rgba(37,99,168,.12)}
+.plan-opt-hdr{padding:14px 16px;border-bottom:1px solid var(--border)}
+.plan-opt-hdr.lean{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-bottom-color:#bbf7d0}
+.plan-opt-hdr.lean .plan-opt-title{color:var(--ok)}
+.plan-opt-hdr.seasonal{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-bottom-color:#bfdbfe}
+.plan-opt-hdr.seasonal .plan-opt-title{color:#1d4ed8}
+.plan-opt-hdr.growth{background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border-bottom-color:#e9d5ff}
+.plan-opt-hdr.growth .plan-opt-title{color:#7c3aed}
+.plan-opt-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.plan-opt-sub{font-size:11px;color:var(--text-soft)}
+.plan-opt-body{padding:14px 16px;font-size:12px;line-height:1.7;color:var(--text-mid);background:var(--surface)}
+.plan-opt-body strong{color:var(--text);font-weight:600}
+.plan-opt-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.plan-metric{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:8px 10px}
+.plan-metric .mv{font-size:15px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace}
+.plan-metric .ml{font-size:10px;color:var(--text-soft);margin-top:2px}
+.plan-select-btn{display:block;width:100%;padding:9px;margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;text-align:center;color:var(--text-mid)}
+.plan-select-btn:hover{background:var(--blue-ghost);border-color:var(--blue-light);color:var(--blue-soft)}
+.plan-select-btn.chosen{background:linear-gradient(135deg,#3730a3,#2563A8);color:#fff;border-color:transparent}
+.plan-saved-item{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:9px 12px;cursor:pointer;transition:background .15s}
+.plan-saved-item:hover{background:var(--blue-ghost)}
+.plan-kpi-cell{background:var(--surface2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:12px 14px;text-align:center}
+.plan-kpi-cell .pv{font-size:20px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue-soft)}
+.plan-kpi-cell .pl{font-size:11px;color:var(--text-soft);margin-top:3px}
+#plan-directive-input:focus{outline:none;border-color:var(--blue-light)}
 </style>
 </head>
 <body>
@@ -292,6 +326,7 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
       <button class="tnav" data-view="crew">Crew</button>
       <button class="tnav" data-view="airports">Airports</button>
       <button class="tnav" data-view="audit">Audit</button>
+      <button class="tnav" data-view="plan" style="background:rgba(99,102,241,.18);color:#a5b4fc;border:1px solid rgba(99,102,241,.3);margin-left:8px">✦ Plan</button>
     </div>
     <button class="gear" onclick="toggleSettings()" title="Settings">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -335,7 +370,7 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
           <div class="fd-chain" id="fd-chain"></div>
           <div class="fd-actions">
             <button class="btn-evaluate" onclick="openEvalFromFlight()">
-              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span style="font-size:13px;line-height:1">✦</span>
               Evaluate Recovery Options
             </button>
             <button class="btn-dismiss" onclick="closeFlightDetail()">Dismiss</button>
@@ -344,7 +379,7 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
         <div id="scenario-area">
           <textarea id="scenario-input" placeholder="Describe any disruption — e.g. VT-ANR nose-wheel failure in Phuket, or Delhi fog diverting 30 flights to Jaipur..."></textarea>
           <button class="btn-eval-main" onclick="evaluateScenario()">
-            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            <span style="font-size:14px;line-height:1">✦</span>
             Evaluate
           </button>
         </div>
@@ -420,6 +455,138 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
       <button class="tbl-close" onclick="closeTable()">← Back to Operations</button>
     </div>
     <div id="table-content"></div>
+  </div>
+
+  <!-- PLAN OVERLAY -->
+  <div id="plan-overlay" style="display:none;position:fixed;inset:56px 0 0 0;background:var(--surface2);z-index:1100;overflow-y:auto">
+    <div style="display:grid;grid-template-columns:260px 1fr;height:100%;overflow:hidden">
+
+      <!-- Plan Left: Month picker + saved rosters -->
+      <div id="plan-left" style="background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto">
+        <div style="padding:16px 16px 8px;border-bottom:1px solid var(--border-soft)">
+          <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px">Roster Planner</div>
+          <div style="font-size:11px;color:var(--text-soft)">Select a month to view or generate</div>
+        </div>
+
+        <!-- Month list -->
+        <div style="padding:12px 16px 4px">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Upcoming Months</div>
+          <div id="plan-month-list"></div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-soft);padding:14px 16px;margin-top:auto">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Saved Rosters</div>
+          <div id="plan-saved-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div id="plan-no-saved" style="font-size:12px;color:var(--text-muted);font-style:italic">No rosters saved yet</div>
+        </div>
+      </div>
+
+      <!-- Plan Right: Main content -->
+      <div id="plan-right" style="display:flex;flex-direction:column;overflow-y:auto;padding:28px 32px">
+
+        <!-- Empty state -->
+        <div id="plan-empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;text-align:center">
+          <div style="width:64px;height:64px;background:var(--blue-pale);border-radius:16px;display:flex;align-items:center;justify-content:center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue-soft)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div style="font-size:18px;font-weight:600;color:var(--text)">Select a month to begin</div>
+          <div style="font-size:13px;color:var(--text-soft);max-width:400px;line-height:1.6">Choose a month from the left panel. You can view existing rosters or generate a new one with AI-powered recommendations.</div>
+        </div>
+
+        <!-- Month content (hidden until month selected) -->
+        <div id="plan-month-content" style="display:none">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px">
+            <div>
+              <div style="font-size:22px;font-weight:600;color:var(--text)" id="plan-month-title">—</div>
+              <div style="font-size:13px;color:var(--text-soft);margin-top:3px" id="plan-month-sub">—</div>
+            </div>
+            <div id="plan-status-badge"></div>
+          </div>
+
+          <!-- Existing roster view -->
+          <div id="plan-existing-roster" style="display:none">
+            <div style="background:var(--ok-bg);border:1px solid var(--ok-border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--ok)" id="plan-existing-label">Roster saved</div>
+                <div style="font-size:12px;color:var(--text-mid);margin-top:2px" id="plan-existing-desc">—</div>
+              </div>
+            </div>
+            <div id="plan-existing-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px"></div>
+            <div id="plan-existing-detail"></div>
+          </div>
+
+          <!-- No roster yet -->
+          <div id="plan-no-roster" style="display:none">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+              <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">No roster created yet for this month</div>
+              <div style="font-size:13px;color:var(--text-soft);line-height:1.6">Use the generator below to create an AI-powered roster plan. You can optionally add specific directives before generating.</div>
+            </div>
+          </div>
+
+          <!-- Generator panel -->
+          <div id="plan-generator" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px">
+            <div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;gap:10px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Roster Generation Directives <span style="font-weight:400;color:var(--text-soft)">(optional)</span></div>
+            </div>
+            <div style="padding:16px 18px">
+              <div style="font-size:12px;color:var(--text-soft);margin-bottom:10px;line-height:1.6">Add any specific operational requirements for this month. For example: <em>"Keep 5 crew on standby at BLR throughout monsoon weeks"</em> or <em>"Prioritise DEL-BOM frequency to 14x daily in peak weeks."</em></div>
+              <textarea id="plan-directive-input" placeholder="e.g. Keep 5 crew on standby at HYD during monsoon peak (Jul 10–25). Add buffer time on GOI routes. Ensure minimum 3 A321neo on BOM-DEL at all times..." style="width:100%;height:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;border-radius:var(--radius-sm);resize:vertical;transition:border-color .2s;line-height:1.5"></textarea>
+              <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+                <button id="plan-generate-btn" onclick="generateRoster()" style="background:linear-gradient(135deg,#3730a3,#2563A8);color:#fff;border:none;padding:10px 24px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:opacity .18s">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  Generate Roster Recommendations
+                </button>
+                <div id="plan-gen-spinner" style="display:none;align-items:center;gap:8px;font-size:12px;color:var(--text-soft)">
+                  <div class="live-dot" style="background:var(--blue-light)"></div>
+                  Analysing fleet, crew &amp; routes…
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roster recommendation results -->
+          <div id="plan-results" style="display:none">
+
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">AI-Generated Roster Recommendations</div>
+            <div style="font-size:12px;color:var(--text-soft);margin-bottom:18px" id="plan-results-sub">Based on current fleet, crew availability, route demand, and seasonal context.</div>
+
+            <div id="plan-insights-bar" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px"></div>
+
+            <!-- AI Contextual alert (monsoon/seasonal) -->
+            <div id="plan-seasonal-alert" style="display:none;background:var(--info-bg);border:1px solid var(--info-border);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--info);margin-bottom:4px" id="plan-seasonal-title">Seasonal Context</div>
+                  <div style="font-size:12px;color:var(--text-mid);line-height:1.7" id="plan-seasonal-body">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Option cards -->
+            <div id="plan-option-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px"></div>
+
+            <!-- Action row after selection -->
+            <div id="plan-save-bar" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:none;align-items:center;gap:16px">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600;color:var(--text)" id="plan-save-label">Option selected</div>
+                <div style="font-size:12px;color:var(--text-soft);margin-top:2px">Saving this roster will lock it as the active plan for the selected month. You can regenerate at any time before the month begins.</div>
+              </div>
+              <button onclick="saveRoster()" style="background:var(--ok);color:#fff;border:none;padding:10px 22px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .18s">
+                Save as Active Roster
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </div>
 
 </div><!-- end shell -->
@@ -631,14 +798,43 @@ function buildFleet(){
     const finalProg=status==='UNSERVICEABLE'?1.0:prog;
 
     // Diversion data: ~4% of airborne flights are diverted
-    // A diverted flight: original dest = toAp, actual current = a divert airport, must still reach toAp
-    const DIVERT_APS=AIRPORTS.filter(a=>a.type==='divert'||a.type==='minor');
+    // A diverted flight: must divert to an airport that lies geographically NEAR the route corridor,
+    // not the origin or destination themselves. Port Blair excluded (isolated island).
+    // IXL (Leh) excluded as divert — it's a destination, not an alternate.
+    const DIVERT_CANDIDATES=AIRPORTS.filter(a=>
+      (a.type==='divert'||a.type==='minor'||a.type==='major')&&
+      a.iata!=='IXZ'&&a.iata!=='IXL'&&
+      a.iata!==fromAp.iata&&a.iata!==toAp.iata
+    );
+    // Score each candidate: must be near the route midpoint and not wildly off-corridor
+    // Route midpoint
+    const midLat=(fromAp.lat+toAp.lat)/2;
+    const midLng=(fromAp.lng+toAp.lng)/2;
+    // Route vector length (rough degrees)
+    const routeLen=Math.sqrt((toAp.lat-fromAp.lat)**2+(toAp.lng-fromAp.lng)**2);
+    // Max deviation from corridor = 25% of route length, min 1.5 deg
+    const corridorTol=Math.max(1.5, routeLen*0.30);
+    // Point-to-line distance: dist from candidate to the FROM→TO segment
+    function ptSegDist(px,py,ax,ay,bx,by){
+      const dx=bx-ax,dy=by-ay;
+      if(dx===0&&dy===0) return Math.sqrt((px-ax)**2+(py-ay)**2);
+      const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+      return Math.sqrt((px-(ax+t*dx))**2+(py-(ay+t*dy))**2);
+    }
+    const nearCorridorAps=DIVERT_CANDIDATES.filter(a=>{
+      const d=ptSegDist(a.lat,a.lng,fromAp.lat,fromAp.lng,toAp.lat,toAp.lng);
+      return d<=corridorTol;
+    });
+    // If nothing fits the corridor (very short route), fall back to closest airport overall
+    const divertPool=nearCorridorAps.length>=1?nearCorridorAps:
+      DIVERT_CANDIDATES.sort((a,b)=>
+        Math.sqrt((a.lat-midLat)**2+(a.lng-midLng)**2)-Math.sqrt((b.lat-midLat)**2+(b.lng-midLng)**2)
+      ).slice(0,3);
     let isDiverted=false, divertedTo=null, divertedFrom=null;
-    if(status==='HIGH_RISK'&&Math.random()<0.35&&!isIntl){
+    if(status==='HIGH_RISK'&&Math.random()<0.35&&!isIntl&&divertPool.length>0){
       isDiverted=true;
-      divertedTo=pick(DIVERT_APS); // currently sitting at this airport
-      divertedFrom=fromAp; // original departure
-      // override status label visually
+      divertedTo=pick(divertPool);
+      divertedFrom=fromAp;
     }
 
     fleet.push({
@@ -1420,6 +1616,13 @@ document.getElementById('top-nav').addEventListener('click',e=>{
   document.querySelectorAll('.tnav').forEach(t=>t.classList.remove('active'));
   e.target.classList.add('active');
   const v=e.target.dataset.view;
+  if(v==='plan') { openPlan(); return; }
+  if(document.getElementById('plan-overlay').style.display!=='none') {
+    document.getElementById('plan-overlay').style.display='none';
+    document.getElementById('main').style.display='grid';
+    document.getElementById('shell').classList.remove('table-open');
+    leafMap&&setTimeout(()=>leafMap.invalidateSize(),0);
+  }
   if(v==='ops') closeTable();
   else showTable(v==='fleet'?'fleet':v==='crew'?'crew':v==='airports'?'airports':'audit');
 });
@@ -1487,6 +1690,433 @@ async function boot(){
   await setLoad(100,'');
   addAudit('SYSTEM READY','Aero-Watch OCC initialized. Fleet: 300 | Pilots: 1,000 | Disrupted: '+fleet.filter(f=>f.status!=='ON_TIME').length);
   setInterval(tick,5000);
+}
+
+// ═══════════════════════════════════════════
+// PLAN MODULE
+// ═══════════════════════════════════════════
+const PLAN_MONTHS=(()=>{
+  const now=new Date();
+  const months=[];
+  // Current + next 5 months
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    months.push({
+      key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),
+      label:d.toLocaleString('en-IN',{month:'long',year:'numeric'}),
+      monthIdx:d.getMonth(), // 0-indexed
+      year:d.getFullYear(),
+      isCurrent:i===0,
+    });
+  }
+  return months;
+})();
+
+// Pre-generate a plausible saved roster for next month (simulating existing plan)
+const NEXT_MONTH=PLAN_MONTHS[1];
+const savedRosters={}; // key -> {optionKey, month, summary, metrics, savedAt}
+
+// Pre-populate next month with a saved roster
+savedRosters[NEXT_MONTH.key]={
+  optionKey:'lean',
+  month:NEXT_MONTH,
+  summary:'Lean Efficiency Roster — optimised for minimum parking cost and maximum aircraft utilisation.',
+  directives:'',
+  metrics:{
+    aircraft:285,
+    crewDeployed:892,
+    flightsPlanned:4840,
+    standbyBases:['DEL','BOM','BLR'],
+    avgUtilHrs:13.2,
+    estimatedSaving:'₹2.4 Cr',
+    routes:ROUTES.length,
+  },
+  savedAt:'Generated 3 days ago',
+};
+
+let activePlanMonth=null;
+let planSelectedOption=null;
+let planGenerated=false;
+
+// Seasonal context lookup
+function getSeasonalContext(monthIdx, year){
+  const monsoonMonths=[5,6,7,8,9]; // Jun-Oct (0-indexed)
+  const peakWinter=[10,11]; // Nov-Dec
+  const peakSummer=[3,4]; // Apr-May
+  const fogSeason=[11,0,1]; // Dec-Feb
+
+  const affectedRoutes={
+    monsoon:['BOM-GOI','MAA-HYD','BLR-COK','CCU-GAU','DEL-LKO'],
+    fog:['DEL-AMD','DEL-JAI','DEL-IXC','DEL-ATQ','DEL-LKO'],
+    summer:['DEL-SIN','DEL-DXB','BOM-DXB','DEL-BKK'],
+    winter:['DEL-BOM','DEL-BLR','BOM-MAA'],
+  };
+
+  if(monsoonMonths.includes(monthIdx)){
+    const intensity=monthIdx===6||monthIdx===7?'peak':'moderate';
+    return {
+      type:'monsoon',
+      title:`☁ Monsoon Season — ${intensity==='peak'?'Peak':'Active'} Phase`,
+      body:`Historical data shows ${intensity==='peak'?'18–24%':'12–15%'} of flights on west-coast and northeastern routes face diversions or delays during this period. Airports most impacted: <strong>Mumbai (BOM), Goa (GOI), Kochi (COK), Guwahati (GAU), Kolkata (CCU)</strong>. Routes flagged: ${affectedRoutes.monsoon.join(', ')}.<br>
+AI recommends: +20min block time buffer on all southwest routes; 2 additional standby aircraft at BOM and COK; crew buffer at CCU for northeastern sector bounce-backs. Pre-position engineering spares at GOI.`,
+      bufferMin:20,
+      standbyAps:['BOM','COK','CCU'],
+      impactPct:intensity==='peak'?22:14,
+    };
+  }
+  if(fogSeason.includes(monthIdx)){
+    return {
+      type:'fog',
+      title:'🌫 Dense Fog Season — North India',
+      body:`Winter fog typically reduces visibility at <strong>Delhi (DEL), Amritsar (ATQ), Chandigarh (IXC), Lucknow (LKO), and Jaipur (JAI)</strong> to below CAT-II minima on 8–14 days this month based on 5-year averages. DEL averages 3–6h of ground holds per fog event.<br>
+AI recommends: Schedule CAT-III qualified crew pairs on all DEL morning departures; pre-position 4 crew standby at DEL overnight for early departures; add 30min block padding on all DEL northbound routes 05:00–10:00 local.`,
+      bufferMin:30,
+      standbyAps:['DEL','ATQ'],
+      impactPct:18,
+    };
+  }
+  if(peakSummer.includes(monthIdx)){
+    return {
+      type:'summer',
+      title:'☀ Summer Peak — Leisure & International Surge',
+      body:`Demand spikes +28–35% on international leisure routes: <strong>DEL-DXB, BOM-DXB, DEL-BKK, BOM-SIN</strong>. Turnaround times at Dubai and Singapore tend to run 15min over schedule in summer due to ATC congestion.<br>
+AI recommends: Deploy A321neo on all trunk international routes; increase DEL-BOM and DEL-BLR to 14x daily; pre-position senior cabin crew at DEL for international heavy days; ensure PTA (pre-departure takeoff authority) slots are blocked 2 weeks ahead.`,
+      bufferMin:15,
+      standbyAps:['DEL','BOM'],
+      impactPct:10,
+    };
+  }
+  if(peakWinter.includes(monthIdx)){
+    return {
+      type:'winter',
+      title:'🎄 Peak Holiday Season — Domestic Surge',
+      body:`Holiday travel surges on domestic trunk routes Dec–Jan. <strong>BOM, BLR, COK, GOI</strong> see 30–40% above-average load factors. Goa particularly sees near-100% loads in December through charter and scheduled ops.<br>
+AI recommends: Max A321neo utilisation on BOM-BLR, BOM-MAA, DEL-GOI. Block minimum 3 A321neo slots daily BOM-GOI. Add cabin crew standby at BOM.`,
+      bufferMin:10,
+      standbyAps:['BOM','GOI'],
+      impactPct:8,
+    };
+  }
+  return null;
+}
+
+function openPlan(){
+  document.getElementById('plan-overlay').style.display='block';
+  document.getElementById('main').style.display='none';
+  document.getElementById('shell').classList.add('table-open');
+  renderPlanMonths();
+  renderPlanSaved();
+  if(PLAN_MONTHS[1]) selectPlanMonth(PLAN_MONTHS[1].key); // default to next month
+}
+
+function closePlan(){
+  document.getElementById('plan-overlay').style.display='none';
+  document.getElementById('main').style.display='grid';
+  document.getElementById('shell').classList.remove('table-open');
+  leafMap&&setTimeout(()=>leafMap.invalidateSize(),0);
+  document.querySelectorAll('.tnav').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tnav[data-view="ops"]').classList.add('active');
+}
+
+function renderPlanMonths(){
+  const el=document.getElementById('plan-month-list');
+  el.innerHTML=PLAN_MONTHS.map(m=>{
+    const hasSaved=!!savedRosters[m.key];
+    const isActive=activePlanMonth===m.key;
+    const dotColor=hasSaved?'var(--ok)':'var(--border)';
+    return `<div class="plan-month-item${hasSaved?' has-roster':''}${isActive?' active':''}" onclick="selectPlanMonth('${m.key}')">
+      <span>${m.label}${m.isCurrent?' <span style="font-size:10px;color:var(--text-muted);font-weight:400">(current)</span>':''}</span>
+      <div class="plan-roster-dot" style="background:${dotColor}" title="${hasSaved?'Roster saved':'No roster yet'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPlanSaved(){
+  const saves=Object.values(savedRosters);
+  const el=document.getElementById('plan-saved-list');
+  const noEl=document.getElementById('plan-no-saved');
+  if(!saves.length){el.innerHTML='';noEl.style.display='block';return;}
+  noEl.style.display='none';
+  el.innerHTML=saves.map(s=>`
+    <div class="plan-saved-item" onclick="selectPlanMonth('${s.month.key}')">
+      <div style="font-size:12px;font-weight:600;color:var(--text)">${s.month.label}</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${s.optionKey==='lean'?'Lean Efficiency':s.optionKey==='seasonal'?'Seasonal Buffer':'Growth Focus'} · ${s.metrics.flightsPlanned} flights</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${s.savedAt}</div>
+    </div>
+  `).join('');
+}
+
+function selectPlanMonth(key){
+  activePlanMonth=key;
+  planSelectedOption=null;
+  planGenerated=false;
+  renderPlanMonths();
+
+  const m=PLAN_MONTHS.find(x=>x.key===key);
+  if(!m) return;
+
+  document.getElementById('plan-empty-state').style.display='none';
+  document.getElementById('plan-month-content').style.display='block';
+  document.getElementById('plan-month-title').textContent=m.label;
+  document.getElementById('plan-directive-input').value='';
+  document.getElementById('plan-results').style.display='none';
+  document.getElementById('plan-save-bar').style.display='none';
+
+  // Status badge
+  const hasSaved=!!savedRosters[key];
+  document.getElementById('plan-month-sub').textContent=hasSaved
+    ?'Active roster saved · Click "Generate Roster" to regenerate with new parameters'
+    :`${m.isCurrent?'Current month':'Upcoming month'} · No roster created yet`;
+
+  const badgeEl=document.getElementById('plan-status-badge');
+  badgeEl.innerHTML=hasSaved
+    ?`<span style="background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600">● Roster Active</span>`
+    :`<span style="background:var(--surface3);color:var(--text-soft);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500">○ No Roster</span>`;
+
+  // Show existing or empty
+  if(hasSaved){
+    showExistingRoster(savedRosters[key]);
+  } else {
+    document.getElementById('plan-existing-roster').style.display='none';
+    document.getElementById('plan-no-roster').style.display='block';
+    document.getElementById('plan-generator').style.display='block';
+  }
+}
+
+function showExistingRoster(saved){
+  document.getElementById('plan-existing-roster').style.display='block';
+  document.getElementById('plan-no-roster').style.display='none';
+  document.getElementById('plan-generator').style.display='block';
+
+  const optLabel={lean:'Lean Efficiency Roster',seasonal:'Seasonal Buffer Roster',growth:'Network Growth Roster'}[saved.optionKey]||'Saved Roster';
+  document.getElementById('plan-existing-label').textContent=`✓ ${optLabel}`;
+  document.getElementById('plan-existing-desc').textContent=`${saved.metrics.flightsPlanned} planned flights · ${saved.metrics.crewDeployed} crew deployed · ${saved.metrics.estimatedSaving} projected saving · ${saved.savedAt}`;
+
+  document.getElementById('plan-existing-kpis').innerHTML=`
+    <div class="plan-kpi-cell"><div class="pv">${saved.metrics.aircraft}</div><div class="pl">Aircraft Rostered</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${saved.metrics.crewDeployed}</div><div class="pl">Crew Deployed</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${saved.metrics.flightsPlanned}</div><div class="pl">Planned Flights</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${saved.metrics.avgUtilHrs}h</div><div class="pl">Avg Aircraft Util/Day</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${saved.metrics.estimatedSaving}</div><div class="pl">Projected Saving</div></div>
+  `;
+
+  document.getElementById('plan-existing-detail').innerHTML=`
+    <div style="background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:14px 16px;font-size:12px;color:var(--text-mid);line-height:1.7">
+      <strong>Standby Bases:</strong> ${saved.metrics.standbyBases.join(', ')} &nbsp;·&nbsp;
+      <strong>Routes Covered:</strong> ${saved.metrics.routes} &nbsp;·&nbsp;
+      <strong>Avg Utilisation:</strong> ${saved.metrics.avgUtilHrs}h/aircraft/day
+      ${saved.directives?`<br><strong>Directives applied:</strong> <em>${saved.directives}</em>`:''}
+    </div>
+  `;
+}
+
+function generateRoster(){
+  const m=PLAN_MONTHS.find(x=>x.key===activePlanMonth);
+  if(!m) return;
+
+  const directive=document.getElementById('plan-directive-input').value.trim();
+  const btn=document.getElementById('plan-generate-btn');
+  const spinner=document.getElementById('plan-gen-spinner');
+  btn.style.opacity='0.5';btn.disabled=true;
+  spinner.style.display='flex';
+
+  addAudit('ROSTER GENERATION',`${m.label}${directive?' · Directive: '+directive.substring(0,60):''}`);
+
+  setTimeout(()=>{
+    btn.style.opacity='1';btn.disabled=false;
+    spinner.style.display='none';
+    planGenerated=true;
+    renderRosterResults(m, directive);
+  }, 2200);
+}
+
+function renderRosterResults(m, directive){
+  const seasonal=getSeasonalContext(m.monthIdx, m.year);
+  const ri2=(a,b)=>Math.floor(Math.random()*(b-a)+a);
+  const rf=(a,b)=>+(Math.random()*(b-a)+a).toFixed(1);
+
+  // Fleet snapshot
+  const totalAC=fleet.length;
+  const onTimeAC=fleet.filter(f=>f.status==='ON_TIME').length;
+  const availCrew=pilots.filter(p=>p.qualified&&!p.fdtlAlert).length;
+  const baseFlights=4200+ri2(100,600);
+
+  // Option metrics
+  const opts={
+    lean:{
+      aircraft:onTimeAC-ri2(5,15),
+      crewDeployed:availCrew-ri2(30,80),
+      flights:baseFlights,
+      utilHrs:rf(12.8,14.2),
+      saving:'₹'+rf(1.8,3.1).toFixed(1)+' Cr',
+      parkingDays:ri2(12,22),
+      standbyBases:['DEL','BOM'],
+    },
+    seasonal:{
+      aircraft:onTimeAC-ri2(0,8),
+      crewDeployed:availCrew-ri2(0,30),
+      flights:baseFlights-ri2(50,150),
+      utilHrs:rf(11.2,12.8),
+      saving:'₹'+rf(0.6,1.4).toFixed(1)+' Cr',
+      parkingDays:ri2(25,40),
+      standbyBases:seasonal?seasonal.standbyAps:['DEL','BOM','BLR'],
+    },
+    growth:{
+      aircraft:onTimeAC,
+      crewDeployed:availCrew,
+      flights:baseFlights+ri2(200,500),
+      utilHrs:rf(13.5,15.0),
+      saving:'-₹'+rf(0.4,1.2).toFixed(1)+' Cr',
+      parkingDays:ri2(5,12),
+      standbyBases:['DEL','BOM','BLR','MAA','CCU'],
+    },
+  };
+
+  // Parse directives for display
+  const hasStandby=/standby|stand.?by/i.test(directive);
+  const hasBOM=/bom|mumbai/i.test(directive);
+  const hasHYD=/hyd|hyderabad/i.test(directive);
+  const directiveNote=directive
+    ?`<div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text-mid);margin-bottom:12px;line-height:1.6"><strong>Directive applied:</strong> ${directive}${hasStandby?' Standby allocation adjusted in all options.':''}</div>`
+    :'';
+
+  // Seasonal alert
+  if(seasonal){
+    document.getElementById('plan-seasonal-alert').style.display='block';
+    document.getElementById('plan-seasonal-title').textContent=seasonal.title;
+    document.getElementById('plan-seasonal-body').innerHTML=seasonal.body;
+  } else {
+    document.getElementById('plan-seasonal-alert').style.display='none';
+  }
+
+  // Insights bar
+  document.getElementById('plan-insights-bar').innerHTML=`
+    <div class="plan-kpi-cell"><div class="pv">${totalAC}</div><div class="pl">Fleet Size</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${availCrew}</div><div class="pl">Eligible Crew</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${ROUTES.length}</div><div class="pl">Active Routes</div></div>
+    <div class="plan-kpi-cell"><div class="pv">${seasonal?seasonal.impactPct+'%':'<5%'}</div><div class="pl">${seasonal?'Seasonal Risk':'Disruption Risk'}</div></div>
+  `;
+
+  // Option cards
+  const seasonalLabel=seasonal?`${seasonal.type==='monsoon'?'Monsoon':seasonal.type==='fog'?'Fog Season':seasonal.type==='summer'?'Summer':'Holiday'} Buffer Roster`:'Weather-Aware Roster';
+  const seasonalSubtitle=seasonal?`Accounts for ${seasonal.type} impact — adds buffer time & standby at risk airports`:'Conservative plan with contingency reserves';
+
+  document.getElementById('plan-option-cards').innerHTML=`
+    ${directiveNote}
+    <div class="plan-opt-card${planSelectedOption==='lean'?' selected':''}" id="plan-card-lean" onclick="selectPlanOption('lean')">
+      <div class="plan-opt-hdr lean">
+        <div class="plan-opt-title">💰 Option A — Lean Efficiency</div>
+        <div class="plan-opt-sub">Maximum cost saving · Tight scheduling</div>
+      </div>
+      <div class="plan-opt-body">
+        Optimises for minimum airport parking charges by keeping turnaround times as short as regulation permits. Aircraft utilisation pushed to <strong>${opts.lean.utilHrs}h/day</strong> average — among the highest in IndiGo's historical range.
+        <br><br>
+        Crew pairs assigned across back-to-back sectors to reduce deadheading. Routes with low load-factors in this month scheduled at reduced frequency, redeploying capacity to trunk routes. Standby positioned only at <strong>${opts.lean.standbyBases.join(' and ')}</strong>.
+        ${hasStandby?'<br><em style="color:var(--ok);font-size:11px">✓ Operator directive incorporated — standby allocation adjusted.</em>':''}
+        ${hasBOM?`<br><em style="color:var(--ok);font-size:11px">✓ Mumbai standby crew boosted per directive.</em>`:''}
+        <div class="plan-opt-metrics">
+          <div class="plan-metric"><div class="mv">${opts.lean.aircraft}</div><div class="ml">Aircraft Rostered</div></div>
+          <div class="plan-metric"><div class="mv">${opts.lean.crewDeployed}</div><div class="ml">Crew Deployed</div></div>
+          <div class="plan-metric"><div class="mv">${opts.lean.flights}</div><div class="ml">Total Planned Flights</div></div>
+          <div class="plan-metric"><div class="mv" style="color:var(--ok)">${opts.lean.saving}</div><div class="ml">vs. Baseline Cost</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--danger);background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:4px;padding:6px 10px">⚠ Risk: No buffer for unexpected disruptions. One AOG event could cascade across ${ri2(6,12)} downstream sectors.</div>
+      </div>
+      <button class="plan-select-btn${planSelectedOption==='lean'?' chosen':''}" id="btn-plan-lean">${planSelectedOption==='lean'?'✓ Selected':'Select this plan'}</button>
+    </div>
+
+    <div class="plan-opt-card${planSelectedOption==='seasonal'?' selected':''}" id="plan-card-seasonal" onclick="selectPlanOption('seasonal')">
+      <div class="plan-opt-hdr seasonal">
+        <div class="plan-opt-title">🌦 Option B — ${seasonalLabel}</div>
+        <div class="plan-opt-sub">${seasonalSubtitle}</div>
+      </div>
+      <div class="plan-opt-body">
+        ${seasonal
+          ?`Based on 5-year disruption history for ${m.label}, this plan adds <strong>+${seasonal.bufferMin}min block time</strong> on all at-risk routes and pre-positions standby aircraft at <strong>${seasonal.standbyAps.join(', ')}</strong>.`
+          :`Conservative scheduling with built-in crew rest buffers and standby allocation at all major hubs.`}
+        <br><br>
+        Aircraft utilisation at <strong>${opts.seasonal.utilHrs}h/day</strong> — slightly below maximum — preserves engineering flexibility. Crew pairs given structured 2-day rest cycles at home base where possible, reducing FDTL risk.
+        ${directive?`<br><em style="color:var(--info);font-size:11px">✓ Operator directive incorporated into buffer calculation.</em>`:''}
+        <div class="plan-opt-metrics">
+          <div class="plan-metric"><div class="mv">${opts.seasonal.aircraft}</div><div class="ml">Aircraft Rostered</div></div>
+          <div class="plan-metric"><div class="mv">${opts.seasonal.crewDeployed}</div><div class="ml">Crew Deployed</div></div>
+          <div class="plan-metric"><div class="mv">${opts.seasonal.flights}</div><div class="ml">Total Planned Flights</div></div>
+          <div class="plan-metric"><div class="mv" style="color:var(--info)">${opts.seasonal.saving}</div><div class="ml">vs. Baseline Cost</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--ok);background:var(--ok-bg);border:1px solid var(--ok-border);border-radius:4px;padding:6px 10px">✓ Recommended by AI: Balances operational resilience with cost efficiency. Best-fit for ${m.label} based on historical patterns.</div>
+      </div>
+      <button class="plan-select-btn${planSelectedOption==='seasonal'?' chosen':''}" id="btn-plan-seasonal">${planSelectedOption==='seasonal'?'✓ Selected':'Select this plan'}</button>
+    </div>
+
+    <div class="plan-opt-card${planSelectedOption==='growth'?' selected':''}" id="plan-card-growth" onclick="selectPlanOption('growth')">
+      <div class="plan-opt-hdr growth">
+        <div class="plan-opt-title">🚀 Option C — Network Growth</div>
+        <div class="plan-opt-sub">Maximum frequency · Full fleet deployment</div>
+      </div>
+      <div class="plan-opt-body">
+        Deploys the full available fleet at peak utilisation — <strong>${opts.growth.utilHrs}h/aircraft/day</strong>. Frequencies on trunk routes (DEL-BOM, BOM-BLR, DEL-BLR) increased to capture maximum market share in ${m.label}.
+        <br><br>
+        New route trials on <strong>LKO-BLR</strong> and <strong>AMD-MAA</strong> included in this plan. All ${opts.growth.standbyBases.length} hub airports staffed with standby crew. Engineering standby at <strong>DEL, BOM, BLR</strong>.
+        ${hasHYD?`<br><em style="color:var(--info);font-size:11px">✓ HYD capacity boosted per operator directive.</em>`:''}
+        <div class="plan-opt-metrics">
+          <div class="plan-metric"><div class="mv">${opts.growth.aircraft}</div><div class="ml">Aircraft Rostered</div></div>
+          <div class="plan-metric"><div class="mv">${opts.growth.crewDeployed}</div><div class="ml">Crew Deployed</div></div>
+          <div class="plan-metric"><div class="mv">${opts.growth.flights}</div><div class="ml">Total Planned Flights</div></div>
+          <div class="plan-metric"><div class="mv" style="color:var(--warn)">${opts.growth.saving}</div><div class="ml">vs. Baseline Cost</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:4px;padding:6px 10px">⚠ Higher operating cost. Parking fees waived (no idle aircraft) but crew overtime and fuel spend elevated. Best suited for peak demand months.</div>
+      </div>
+      <button class="plan-select-btn${planSelectedOption==='growth'?' chosen':''}" id="btn-plan-growth">${planSelectedOption==='growth'?'✓ Selected':'Select this plan'}</button>
+    </div>
+  `;
+
+  document.getElementById('plan-results').style.display='block';
+  document.getElementById('plan-results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function selectPlanOption(key){
+  planSelectedOption=key;
+  const labels={lean:'Option A — Lean Efficiency',seasonal:'Option B — Seasonal Buffer',growth:'Option C — Network Growth'};
+  document.getElementById('plan-save-label').textContent=labels[key]+' selected';
+  document.getElementById('plan-save-bar').style.display='flex';
+  // Re-render cards with selection state
+  const m=PLAN_MONTHS.find(x=>x.key===activePlanMonth);
+  const directive=document.getElementById('plan-directive-input').value.trim();
+  if(m&&planGenerated) renderRosterResults(m, directive);
+  document.getElementById('plan-save-bar').style.display='flex';
+  document.getElementById('plan-save-bar').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function saveRoster(){
+  if(!planSelectedOption||!activePlanMonth) return;
+  const m=PLAN_MONTHS.find(x=>x.key===activePlanMonth);
+  if(!m) return;
+  const directive=document.getElementById('plan-directive-input').value.trim();
+  const ri2=(a,b)=>Math.floor(Math.random()*(b-a)+a);
+  const rf=(a,b)=>+(Math.random()*(b-a)+a).toFixed(1);
+  const metrics={
+    lean:{aircraft:fleet.filter(f=>f.status==='ON_TIME').length-ri2(5,15),crewDeployed:pilots.filter(p=>p.qualified).length-ri2(30,80),flightsPlanned:4200+ri2(100,400),avgUtilHrs:rf(12.8,14.2),estimatedSaving:'₹'+rf(1.8,3.1).toFixed(1)+' Cr',standbyBases:['DEL','BOM'],routes:ROUTES.length},
+    seasonal:{aircraft:fleet.filter(f=>f.status==='ON_TIME').length-ri2(0,8),crewDeployed:pilots.filter(p=>p.qualified).length-ri2(0,30),flightsPlanned:4100+ri2(50,200),avgUtilHrs:rf(11.2,12.8),estimatedSaving:'₹'+rf(0.6,1.4).toFixed(1)+' Cr',standbyBases:['DEL','BOM','BLR'],routes:ROUTES.length},
+    growth:{aircraft:fleet.filter(f=>f.status==='ON_TIME').length,crewDeployed:pilots.filter(p=>p.qualified).length,flightsPlanned:4600+ri2(100,500),avgUtilHrs:rf(13.5,15.0),estimatedSaving:'-₹'+rf(0.4,1.2).toFixed(1)+' Cr',standbyBases:['DEL','BOM','BLR','MAA','CCU'],routes:ROUTES.length+2},
+  }[planSelectedOption];
+
+  savedRosters[activePlanMonth]={
+    optionKey:planSelectedOption,
+    month:m,
+    summary:{lean:'Lean Efficiency Roster — optimised for minimum parking cost and maximum aircraft utilisation.',seasonal:'Seasonal Buffer Roster — built-in buffers for weather and seasonal disruption risk.',growth:'Network Growth Roster — full fleet deployment for maximum frequency and market share.'}[planSelectedOption],
+    directives:directive,
+    metrics,
+    savedAt:'Saved just now',
+  };
+
+  addAudit('ROSTER SAVED',`${m.label} · ${planSelectedOption.toUpperCase()} plan · ${metrics.flightsPlanned} flights`);
+  planSelectedOption=null;
+  planGenerated=false;
+
+  // Re-render
+  renderPlanMonths();
+  renderPlanSaved();
+  selectPlanMonth(activePlanMonth);
 }
 
 boot();

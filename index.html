@@ -244,6 +244,24 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
 .scrollable{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .scrollable::-webkit-scrollbar{width:4px}
 .scrollable::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* ── CREW SUB-TABS ── */
+.crew-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;flex-shrink:0}
+.crew-tab{flex:1;padding:9px 0;text-align:center;font-size:12px;font-weight:500;cursor:pointer;color:var(--text-soft);border-bottom:2px solid transparent;transition:all .18s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif}
+.crew-tab.active{color:var(--blue-soft);border-bottom-color:var(--blue-soft);background:var(--blue-ghost)}
+.crew-tab:hover:not(.active){color:var(--text-mid);background:var(--surface2)}
+
+/* ── DIVERTED STATUS ── */
+.ri-status.diverted{background:#FDF4FF;color:#7C3AED;border:1px solid #E9D5FF}
+.ri-tag.diverted{background:#FDF4FF;color:#7C3AED}
+#decision-note:focus{outline:none;border-color:var(--blue-light)}
+
+/* ── OPTION SELECT RING ── */
+.eval-card.option-selected{outline:2px solid var(--blue-soft);outline-offset:2px}
+.eval-card.option-selected .eval-card-hdr{position:relative}
+.option-select-btn{display:block;width:100%;margin-top:10px;padding:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;text-align:center}
+.option-select-btn:hover{background:var(--blue-ghost);border-color:var(--blue-light);color:var(--blue-soft)}
+.option-select-btn.chosen{background:var(--blue-dark);color:#fff;border-color:var(--blue-dark)}
 </style>
 </head>
 <body>
@@ -263,7 +281,7 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
   <div id="topbar">
     <div class="logo">
       <div class="logo-mark">
-        <svg viewBox="0 0 24 24"><path d="M21 15l-9-9-4 4-5-3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M3 12l4-4 9 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M21 15l-9-9-4 4-5-3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12l4-4 9 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/></svg>
       </div>
       <div class="logo-text">Aero<span>Watch</span></div>
     </div>
@@ -290,7 +308,8 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
         <div class="kpi blue"><div class="kpi-val" id="k-total">300</div><div class="kpi-lbl">Aircraft Active</div><div class="kpi-sub" id="k-total-sub">IndiGo network</div></div>
         <div class="kpi danger"><div class="kpi-val" id="k-disrupted">—</div><div class="kpi-lbl">Disrupted Flights</div><div class="kpi-sub" id="k-dis-sub">—</div></div>
         <div class="kpi warn"><div class="kpi-val" id="k-delayed">—</div><div class="kpi-lbl">Delayed &lt;45min</div><div class="kpi-sub" id="k-del-sub">avg delay</div></div>
-        <div class="kpi danger"><div class="kpi-val" id="k-aog">—</div><div class="kpi-lbl">Aircraft on Ground</div><div class="kpi-sub" id="k-aog-sub">AOG events</div></div>
+        <div class="kpi warn"><div class="kpi-val" id="k-aog">—</div><div class="kpi-lbl">Unserviceable</div><div class="kpi-sub" id="k-aog-sub">on-ground aircraft</div></div>
+        <div class="kpi danger"><div class="kpi-val" id="k-diverted">—</div><div class="kpi-lbl">Diverted</div><div class="kpi-sub" id="k-div-sub">crew implications</div></div>
         <div class="kpi warn"><div class="kpi-val" id="k-fdtl">—</div><div class="kpi-lbl">Crew Duty Alerts</div><div class="kpi-sub" id="k-fdtl-sub">near FDTL limit</div></div>
         <div class="kpi ok"><div class="kpi-val" id="k-ontime">—</div><div class="kpi-lbl">On Time</div><div class="kpi-sub" id="k-ot-sub">departures</div></div>
       </div>
@@ -338,6 +357,7 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
       <div class="feed-filters" id="feed-filters">
         <div class="filter-pill active" data-filter="all">All</div>
         <div class="filter-pill" data-filter="disrupted">Disrupted</div>
+        <div class="filter-pill" data-filter="diverted">Diverted</div>
         <div class="filter-pill" data-filter="delayed">Delayed</div>
         <div class="filter-pill" data-filter="crew">Crew Alert</div>
         <div class="filter-pill" data-filter="intl">International</div>
@@ -365,12 +385,38 @@ td.strong{font-weight:600;color:var(--text);font-family:'DM Mono',monospace;font
     <div id="eval-banner"></div>
     <div id="eval-meta" class="eval-meta"></div>
     <div id="eval-options" class="eval-grid"></div>
+    <!-- DECISION LOGGING -->
+    <div id="decision-panel" style="display:none;margin-top:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="background:var(--surface2);padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div style="font-size:13px;font-weight:600">Log Decision</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-left:4px" id="decision-option-label">—</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text-muted)">This does not execute any action. It records that a decision was made outside this system so the disruption flag is updated.</div>
+      </div>
+      <div style="padding:16px;background:var(--surface)">
+        <div id="decision-consequence" style="font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:14px;background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border-soft)"></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <textarea id="decision-note" placeholder="Optional: Add a note (e.g. 'Confirmed by Ops Manager — Rajiv Mehta at 14:32')" style="flex:1;height:44px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);resize:none;transition:border-color .2s"></textarea>
+          <button id="decision-confirm-btn" onclick="confirmDecision()" style="background:var(--blue-dark);color:#fff;border:none;padding:10px 22px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .18s">Mark as Acknowledged</button>
+        </div>
+      </div>
+    </div>
+    <div id="decision-confirmed" style="display:none;margin-top:16px;background:var(--ok-bg);border:1px solid var(--ok-border);border-radius:var(--radius);padding:14px 16px;display:none">
+      <div style="font-size:13px;font-weight:600;color:var(--ok);margin-bottom:4px">✓ Decision Acknowledged</div>
+      <div id="decision-confirmed-text" style="font-size:12px;color:var(--text-mid)"></div>
+    </div>
   </div>
 
   <!-- TABLE OVERLAY -->
   <div id="table-overlay">
     <div class="tbl-hdr">
       <div class="tbl-title" id="tbl-title">Database</div>
+      <div id="crew-tabs-wrap" style="display:none">
+        <div class="crew-tabs">
+          <button class="crew-tab active" data-crew="pilots" onclick="switchCrewTab('pilots')">Flight Deck</button>
+          <button class="crew-tab" data-crew="cabin" onclick="switchCrewTab('cabin')">Cabin Crew</button>
+        </div>
+      </div>
       <button class="tbl-close" onclick="closeTable()">← Back to Operations</button>
     </div>
     <div id="table-content"></div>
@@ -462,22 +508,28 @@ const AIRPORTS=[
 ];
 
 const ROUTES=[
+  // Domestic trunk routes (high frequency)
   ['DEL','BOM'],['DEL','MAA'],['DEL','BLR'],['DEL','CCU'],['DEL','HYD'],['DEL','COK'],['DEL','AMD'],
   ['DEL','JAI'],['DEL','LKO'],['DEL','ATQ'],['DEL','GAU'],['DEL','IXC'],['DEL','PNQ'],['DEL','GOI'],
-  ['DEL','IXL'],// Leh route!
+  ['DEL','IXL'],
   ['BOM','MAA'],['BOM','BLR'],['BOM','HYD'],['BOM','COK'],['BOM','AMD'],['BOM','GOI'],['BOM','PNQ'],['BOM','JDH'],['BOM','UDR'],
   ['MAA','BLR'],['MAA','HYD'],['MAA','COK'],['MAA','CCU'],['MAA','IXZ'],
   ['BLR','HYD'],['BLR','COK'],['BLR','CCU'],['BLR','AMD'],
   ['CCU','GAU'],
   ['HYD','COK'],['HYD','AMD'],
-  ['DEL','SIN'],['DEL','BKK'],['DEL','DXB'],['DEL','HKG'],
+  // International — IndiGo operates 1-2 daily on most, not a dozen
+  ['DEL','DXB'],['DEL','SIN'],['DEL','BKK'],['DEL','HKG'],
   ['BOM','DXB'],['BOM','SIN'],['BOM','CMB'],['BOM','HKT'],
-  ['MAA','CMB'],['MAA','SIN'],['BLR','SIN'],['BLR','DXB'],
-  ['CCU','HKG'],['HYD','SIN'],['COK','DXB'],['DEL','HKT'],
+  ['MAA','CMB'],['MAA','SIN'],
+  ['BLR','SIN'],['BLR','DXB'],
+  ['CCU','HKG'],['COK','DXB'],
 ];
 
 const RANKS=['Captain','First Officer','Senior First Officer'];
 const HUBS=['DEL','BOM','BLR','MAA','CCU','HYD'];
+// International routes — cap simultaneous airborne to 1-2 per route
+const INTL_ROUTES=['DEL-DXB','DEL-SIN','DEL-BKK','DEL-HKG','BOM-DXB','BOM-SIN','BOM-CMB','BOM-HKT','MAA-CMB','MAA-SIN','BLR-SIN','BLR-DXB','CCU-HKG','COK-DXB'];
+let intlRouteCounts={};
 
 // ═══════════════════════════════════════════
 // UTILITIES
@@ -491,9 +543,10 @@ const apByIata=iata=>AIRPORTS.find(a=>a.iata===iata);
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
-let fleet=[], pilots=[], riskFeed=[], auditLog=[];
+let fleet=[], pilots=[], cabinCrew=[], riskFeed=[], auditLog=[];
 let leafMap=null, markers=[];
-let selectedFlightId=null, activeFilter='all';
+let selectedFlightId=null, activeFilter='all', activeCrewTab='pilots';
+let currentEvalFlight=null, selectedOptionKey=null, acknowledgedFlights=new Set();
 
 // ═══════════════════════════════════════════
 // DATA GENERATION
@@ -512,7 +565,7 @@ function genChain(fromAp, toAp, status){
       from:prev.iata,to:next.iata,
       depStr:fmtT(dep),arrStr:fmtT(arr),
       flt:'6E'+ri(100,9999),
-      affected:(i>0&&(status==='AOG'||status==='HIGH_RISK'))||lehBlocked,
+      affected:(i>0&&(status==='UNSERVICEABLE'||status==='HIGH_RISK'))||lehBlocked,
       lehBlocked,
     });
     prev=next;
@@ -523,40 +576,91 @@ function genChain(fromAp, toAp, status){
 function buildFleet(){
   const usedTails=new Set();
   fleet=[];
+  intlRouteCounts={};
   const letters='ABCDEFGHIJKLMNPQRSTUVWXYZ'.split('');
+  // Separate domestic and international route pools
+  const domRoutes=ROUTES.filter(r=>{const a=apByIata(r[0]),b=apByIata(r[1]);return a&&b&&a.type!=='intl'&&b.type!=='intl';});
+  const intlRoutes=ROUTES.filter(r=>{const a=apByIata(r[0]),b=apByIata(r[1]);return a&&b&&(a.type==='intl'||b.type==='intl');});
+
   for(let i=0;i<300;i++){
     let tail;
     do{tail='VT-'+pick(letters)+pick(letters)+pick(letters);}while(usedTails.has(tail));
     usedTails.add(tail);
     const type=i<180?'A320neo':i<240?'A320ceo':i<285?'A321neo':'ATR 72';
-    const route=pick(ROUTES);
-    const fromAp=apByIata(route[0])||AIRPORTS[0];
-    const toAp=apByIata(route[1])||AIRPORTS[1];
-    const isIntl=fromAp.type==='intl'||toAp.type==='intl';
+
+    // Pick route — strongly prefer domestic; intl max 2 concurrent per route
+    let route=null, fromAp=null, toAp=null, isIntl=false;
+    if(Math.random()<0.12 && intlRoutes.length>0){
+      // Try to pick intl route with <2 already assigned
+      const shuffled=[...intlRoutes].sort(()=>Math.random()-.5);
+      for(const r of shuffled){
+        const key=r[0]+'-'+r[1];
+        if((intlRouteCounts[key]||0)<2){
+          route=r; intlRouteCounts[key]=(intlRouteCounts[key]||0)+1; isIntl=true; break;
+        }
+      }
+    }
+    if(!route) route=pick(domRoutes);
+    fromAp=apByIata(route[0])||AIRPORTS[0];
+    toAp=apByIata(route[1])||AIRPORTS[1];
+    isIntl=fromAp.type==='intl'||toAp.type==='intl';
+
     const prog=rn(0.05,0.95);
     const lat=fromAp.lat+(toAp.lat-fromAp.lat)*prog+rn(-0.3,0.3);
     const lng=fromAp.lng+(toAp.lng-fromAp.lng)*prog+rn(-0.3,0.3);
     const roll=Math.random();
     let status,delayMin=0;
-    if(roll<0.03){status='AOG';delayMin=999;}
-    else if(roll<0.09){status='HIGH_RISK';delayMin=ri(60,240);}
-    else if(roll<0.22){status='DELAYED';delayMin=ri(15,58);}
-    else{status='ON_TIME';}
-    const ripple=status==='AOG'?ri(4,8):status==='HIGH_RISK'?ri(2,5):status==='DELAYED'?ri(0,3):0;
+
+    // KEY FIX: AOG aircraft are NOT airborne — they are parked at an airport
+    // So AOG aircraft get their lat/lng snapped to the destination airport, not mid-air
+    if(roll<0.025){
+      status='UNSERVICEABLE'; delayMin=999;
+    } else if(roll<0.09){
+      status='HIGH_RISK'; delayMin=ri(60,240);
+    } else if(roll<0.22){
+      status='DELAYED'; delayMin=ri(15,58);
+    } else{
+      status='ON_TIME';
+    }
+
+    const ripple=status==='UNSERVICEABLE'?ri(4,8):status==='HIGH_RISK'?ri(2,5):status==='DELAYED'?ri(0,3):0;
+
+    // Unserviceable aircraft: place them AT an airport, not mid-air
+    const finalLat=status==='UNSERVICEABLE'?toAp.lat+rn(-0.02,0.02):lat;
+    const finalLng=status==='UNSERVICEABLE'?toAp.lng+rn(-0.02,0.02):lng;
+    const finalProg=status==='UNSERVICEABLE'?1.0:prog;
+
+    // Diversion data: ~4% of airborne flights are diverted
+    // A diverted flight: original dest = toAp, actual current = a divert airport, must still reach toAp
+    const DIVERT_APS=AIRPORTS.filter(a=>a.type==='divert'||a.type==='minor');
+    let isDiverted=false, divertedTo=null, divertedFrom=null;
+    if(status==='HIGH_RISK'&&Math.random()<0.35&&!isIntl){
+      isDiverted=true;
+      divertedTo=pick(DIVERT_APS); // currently sitting at this airport
+      divertedFrom=fromAp; // original departure
+      // override status label visually
+    }
+
     fleet.push({
       id:i,tail,type,
       from:fromAp.iata,to:toAp.iata,
       fromCity:fromAp.city,toCity:toAp.city,
       fromLat:fromAp.lat,fromLng:fromAp.lng,
       toLat:toAp.lat,toLng:toAp.lng,
-      lat,lng,progress:prog,
+      lat:isDiverted?divertedTo.lat+rn(-0.05,0.05):finalLat,
+      lng:isDiverted?divertedTo.lng+rn(-0.05,0.05):finalLng,
+      progress:isDiverted?0.5:finalProg,
       status,delayMin,ripple,isIntl,
+      isDiverted,
+      divertedTo:isDiverted?divertedTo.iata:null,
+      divertedToCity:isDiverted?divertedTo.city:null,
       flightNo:'6E'+ri(100,9999),
       pax:ri(148,226),
       pilotId:null,
+      landingsThisDuty:isDiverted?2:ri(0,2), // diverted = already 2 landings (origin + divert airport)
       etops:type==='A321neo'&&Math.random()>.4,
       nextMx:new Date(Date.now()+ri(1,120)*86400000).toISOString().split('T')[0],
-      city:prog<0.5?fromAp.iata:toAp.iata,
+      city:status==='UNSERVICEABLE'?toAp.iata:isDiverted?divertedTo.iata:(finalProg<0.5?fromAp.iata:toAp.iata),
       chain:genChain(fromAp,toAp,status),
       heading:Math.atan2(toAp.lng-fromAp.lng,toAp.lat-fromAp.lat)*(180/Math.PI),
     });
@@ -588,15 +692,57 @@ function buildPilots(){
   });
 }
 
+const CABIN_ROLES=['Senior Cabin Crew','Cabin Crew','In-Flight Supervisor'];
+const CABIN_NAMES_F=['Priya','Ananya','Divya','Ritu','Sneha','Pooja','Kavya','Meera','Simran','Anjali','Nisha','Shreya','Deepika','Asha','Vandana','Sunita','Rekha','Geeta','Shalini','Neha'];
+const CABIN_NAMES_M=['Rahul','Arjun','Kiran','Suresh','Vikas','Amit','Rajesh','Manoj','Sandeep','Deepak'];
+function buildCabinCrew(){
+  cabinCrew=[];
+  const allNames=[...CABIN_NAMES_F.map(n=>({n,g:'F'})),...CABIN_NAMES_M.map(n=>({n,g:'M'}))];
+  for(let i=0;i<800;i++){
+    const base=pick(HUBS);
+    const onDuty=Math.random()>.4;
+    const dutyRem=onDuty?ri(0,420):420;
+    const nm=pick(allNames);
+    cabinCrew.push({
+      id:i,cid:'CC'+String(i).padStart(4,'0'),
+      name:nm.n+' '+(nm.g==='F'?pick(['Sharma','Gupta','Patel','Singh','Reddy','Nair','Iyer']):pick(['Kumar','Singh','Verma','Rao','Joshi'])),
+      gender:nm.g,
+      role:pick(CABIN_ROLES),base,
+      curLoc:(Math.random()>.35?apByIata(base):pick(AIRPORTS))?.iata||base,
+      dutyRem,onDuty,
+      fdtlAlert:onDuty&&dutyRem<60,
+      fdtlCrit:onDuty&&dutyRem<20,
+      qualified:Math.random()>.05,
+      tailId:null,yrsExp:ri(1,18),
+    });
+  }
+}
+
 function buildRiskFeed(){
   riskFeed=fleet
-    .filter(f=>f.status!=='ON_TIME'||(f.isIntl&&f.delayMin>0))
+    .filter(f=>{
+      if(acknowledgedFlights.has(f.id)) return false; // acknowledged — no longer flagged
+      return f.status!=='ON_TIME'||f.isDiverted||(f.isIntl&&f.delayMin>0);
+    })
     .map(f=>{
       const pilot=f.pilotId?pilots.find(p=>p.pid===f.pilotId):null;
-      return {...f,hasFdtl:pilot&&(pilot.fdtlAlert||pilot.fdtlCrit),pilotDuty:pilot?.dutyRem??null};
+      const landingLimit=3; // DGCA: typically 3 landings per duty period for narrow-body
+      const crewLandingAlert=f.isDiverted&&f.landingsThisDuty>=2; // 2 done, 1 sector left but may breach
+      return {...f,
+        hasFdtl:pilot&&(pilot.fdtlAlert||pilot.fdtlCrit),
+        pilotDuty:pilot?.dutyRem??null,
+        crewLandingAlert,
+      };
     })
     .sort((a,b)=>{
-      const w=f=>f.status==='AOG'?100:(f.status==='HIGH_RISK'?50:0)+(f.isIntl?30:0)+(f.hasFdtl?20:0)+(f.ripple*3);
+      const w=f=>
+        (f.isDiverted?80:0)+
+        (f.status==='UNSERVICEABLE'?100:0)+
+        (f.status==='HIGH_RISK'?50:0)+
+        (f.isIntl?30:0)+
+        (f.hasFdtl?20:0)+
+        (f.crewLandingAlert?40:0)+
+        (f.ripple*3);
       return w(b)-w(a);
     });
 }
@@ -605,20 +751,23 @@ function buildRiskFeed(){
 // DASHBOARD KPIs
 // ═══════════════════════════════════════════
 function updateKpis(){
-  const aog=fleet.filter(f=>f.status==='AOG');
-  const hi=fleet.filter(f=>f.status==='HIGH_RISK');
+  const usv=fleet.filter(f=>f.status==='UNSERVICEABLE');
+  const hi=fleet.filter(f=>f.status==='HIGH_RISK'&&!f.isDiverted);
+  const diverted=fleet.filter(f=>f.isDiverted);
   const delayed=fleet.filter(f=>f.status==='DELAYED');
-  const onTime=fleet.filter(f=>f.status==='ON_TIME');
+  const onTime=fleet.filter(f=>f.status==='ON_TIME'&&!f.isDiverted);
   const fdtlAlerts=pilots.filter(p=>p.fdtlAlert||p.fdtlCrit);
   const avgDelay=delayed.length?Math.round(delayed.reduce((s,f)=>s+f.delayMin,0)/delayed.length):0;
   document.getElementById('k-total').textContent='300';
   document.getElementById('k-total-sub').textContent=ROUTES.length+' active routes';
-  document.getElementById('k-disrupted').textContent=aog.length+hi.length;
-  document.getElementById('k-dis-sub').textContent=aog.length+' AOG + '+hi.length+' high risk';
+  document.getElementById('k-disrupted').textContent=usv.length+hi.length;
+  document.getElementById('k-dis-sub').textContent=usv.length+' grounded · '+hi.length+' high risk';
   document.getElementById('k-delayed').textContent=delayed.length;
   document.getElementById('k-del-sub').textContent='avg '+avgDelay+'min delay';
-  document.getElementById('k-aog').textContent=aog.length;
-  document.getElementById('k-aog-sub').textContent=aog.length>0?'immediate action needed':'all clear';
+  document.getElementById('k-aog').textContent=usv.length;
+  document.getElementById('k-aog-sub').textContent=usv.length>0?'awaiting clearance':'all serviceable';
+  document.getElementById('k-diverted').textContent=diverted.length;
+  document.getElementById('k-div-sub').textContent='crew landing checks needed';
   document.getElementById('k-fdtl').textContent=fdtlAlerts.length;
   document.getElementById('k-fdtl-sub').textContent=pilots.filter(p=>p.fdtlCrit).length+' critical';
   document.getElementById('k-ontime').textContent=onTime.length;
@@ -657,27 +806,36 @@ function renderAirports(){
 function renderRiskFeed(){
   const list=document.getElementById('risk-list');
   let items=riskFeed;
-  if(activeFilter==='disrupted') items=items.filter(f=>f.status==='AOG'||f.status==='HIGH_RISK');
-  else if(activeFilter==='delayed') items=items.filter(f=>f.status==='DELAYED');
-  else if(activeFilter==='crew') items=items.filter(f=>f.hasFdtl);
+  if(activeFilter==='disrupted') items=items.filter(f=>f.status==='UNSERVICEABLE'||f.status==='HIGH_RISK'||f.isDiverted);
+  else if(activeFilter==='diverted') items=items.filter(f=>f.isDiverted);
+  else if(activeFilter==='delayed') items=items.filter(f=>f.status==='DELAYED'&&!f.isDiverted);
+  else if(activeFilter==='crew') items=items.filter(f=>f.hasFdtl||f.crewLandingAlert);
   else if(activeFilter==='intl') items=items.filter(f=>f.isIntl);
 
   list.innerHTML=items.slice(0,80).map(f=>{
-    const isDisrupted=f.status==='AOG'||f.status==='HIGH_RISK';
-    const statusLabel=f.status==='AOG'?'Disrupted':f.status==='HIGH_RISK'?'Disrupted':'Delayed';
-    const statusClass=isDisrupted?'disrupted':f.status==='DELAYED'?'delayed':'monitoring';
+    const statusLabel=f.isDiverted?'Diverted':f.status==='UNSERVICEABLE'?'Unserviceable':f.status==='HIGH_RISK'?'Disrupted':'Delayed';
+    const statusClass=f.isDiverted?'diverted':f.status==='UNSERVICEABLE'?'disrupted':f.status==='HIGH_RISK'?'disrupted':f.status==='DELAYED'?'delayed':'monitoring';
+    const routeDesc=f.isDiverted
+      ?`${f.fromCity} → ${f.toCity} (via ${f.divertedToCity}) · ${f.pax} pax`
+      :`${f.fromCity} → ${f.toCity} · ${f.pax} pax · ${f.type}`;
     const tags=[];
-    if(f.status==='AOG') tags.push('<span class="ri-tag hot">Aircraft on Ground</span>');
-    if(f.delayMin>0&&f.delayMin<999) tags.push(`<span class="ri-tag med">Delay: +${f.delayMin}min</span>`);
+    if(f.isDiverted){
+      tags.push(`<span class="ri-tag diverted">Diverted to ${f.divertedToCity}</span>`);
+      tags.push(`<span class="ri-tag hot">Still needs to reach ${f.toCity}</span>`);
+      if(f.crewLandingAlert) tags.push('<span class="ri-tag hot">Crew: 2 landings done — check return sector eligibility</span>');
+      else tags.push('<span class="ri-tag med">Crew landing count: review before return sector</span>');
+    }
+    if(f.status==='UNSERVICEABLE') tags.push('<span class="ri-tag hot">Grounded — not airworthy</span>');
+    if(f.delayMin>0&&f.delayMin<999) tags.push(`<span class="ri-tag med">+${f.delayMin}min delay</span>`);
     if(f.ripple>0) tags.push(`<span class="ri-tag med">${f.ripple} downstream legs affected</span>`);
-    if(f.hasFdtl) tags.push('<span class="ri-tag hot">Crew duty limit</span>');
+    if(f.hasFdtl) tags.push('<span class="ri-tag hot">Crew near duty limit</span>');
     if(f.isIntl) tags.push('<span class="ri-tag cool">International</span>');
     return `<div class="risk-item${f.id===selectedFlightId?' selected':''}" onclick="selectFlight(${f.id})">
       <div class="ri-top">
         <span class="ri-flt">${f.flightNo} &middot; ${f.tail}</span>
         <span class="ri-status ${statusClass}">${statusLabel}</span>
       </div>
-      <div class="ri-route">${f.fromCity} → ${f.toCity} &middot; ${f.pax} pax &middot; ${f.type}</div>
+      <div class="ri-route">${routeDesc}</div>
       <div class="ri-tags">${tags.join('')}</div>
     </div>`;
   }).join('');
@@ -703,7 +861,8 @@ function makePlaneIcon(color){
 }
 
 function planeColor(f){
-  if(f.status==='AOG') return '#DC2626';
+  if(f.isDiverted) return '#7C3AED'; // purple — diverted, on ground at alternate
+  if(f.status==='UNSERVICEABLE') return '#92400E'; // brown-amber — grounded not airborne
   if(f.status==='HIGH_RISK') return '#D97706';
   if(f.isIntl&&f.delayMin>0) return '#1D4ED8';
   if(f.status==='DELAYED') return '#D97706';
@@ -774,33 +933,57 @@ function selectFlight(id){
 
 function showFlightDetail(f){
   const pilot=f.pilotId?pilots.find(p=>p.pid===f.pilotId):null;
-  document.getElementById('fd-flt').textContent=`${f.flightNo} · ${f.fromCity} → ${f.toCity}`;
-  const statusTxt=f.status==='AOG'?'Aircraft on Ground (AOG)':f.status==='HIGH_RISK'?`High Risk — ${f.delayMin}min delay`:f.status==='DELAYED'?`Delayed ${f.delayMin}min`:'On Time';
-  const statusCol=f.status==='AOG'?'var(--danger)':f.status==='HIGH_RISK'?'var(--warn)':f.status==='DELAYED'?'var(--warn)':'var(--ok)';
+  document.getElementById('fd-flt').textContent=f.isDiverted
+    ?`${f.flightNo} · ${f.fromCity} → ${f.toCity} — Diverted to ${f.divertedToCity}`
+    :`${f.flightNo} · ${f.fromCity} → ${f.toCity}`;
+  const statusTxt=f.isDiverted?`Diverted to ${f.divertedToCity}`:f.status==='UNSERVICEABLE'?'Unserviceable — Grounded':f.status==='HIGH_RISK'?`High Risk — ${f.delayMin}min delay`:f.status==='DELAYED'?`Delayed ${f.delayMin}min`:'On Time';
+  const statusCol=f.isDiverted?'#7C3AED':f.status==='UNSERVICEABLE'?'var(--warn)':f.status==='HIGH_RISK'?'var(--warn)':f.status==='DELAYED'?'var(--warn)':'var(--ok)';
   document.getElementById('fd-tail').innerHTML=`${f.tail} &middot; ${f.type} &middot; <span style="color:${statusCol};font-weight:600">${statusTxt}</span>`;
   const grid=document.getElementById('fd-grid');
+  // Crew landing analysis for diverted flights
+  const maxLandings=3;
+  const landingsDone=f.landingsThisDuty||0;
+  const landingsLeft=maxLandings-landingsDone;
+  const crewLandingNote=f.isDiverted
+    ?landingsLeft>=2
+      ?`<span style="color:var(--ok)">${landingsDone} done · ${landingsLeft} remaining — can operate return to ${f.toCity}</span>`
+      :landingsLeft===1
+      ?`<span style="color:var(--warn)">${landingsDone} done · 1 landing left — can reach ${f.toCity} but return sector needs fresh crew</span>`
+      :`<span style="color:var(--danger)">${landingsDone} done · 0 remaining — crew cannot operate any further sector today. Fresh crew required.</span>`
+    : pilot?(pilot.fdtlCrit?`<span style="color:var(--danger);font-weight:600">${pilot.dutyRem}min — Critical</span>`:pilot.fdtlAlert?`<span style="color:var(--warn);font-weight:600">${pilot.dutyRem}min — Alert</span>`:`${pilot.dutyRem}min`):'Unassigned';
   const items=[
     {l:'Passengers on Board',v:f.pax+' pax'},
-    {l:'Affected Downstream',v:f.ripple>0?f.ripple+' flights':'-'},
-    {l:'Crew Duty Remaining',v:pilot?(pilot.fdtlCrit?`<span style="color:var(--danger);font-weight:600">${pilot.dutyRem}min — Critical</span>`:pilot.fdtlAlert?`<span style="color:var(--warn);font-weight:600">${pilot.dutyRem}min — Alert</span>`:`${pilot.dutyRem}min`):'Unassigned'},
+    {l:'Affected Downstream',v:f.ripple>0?f.ripple+' sectors':'-'},
+    {l:f.isDiverted?'Crew Landings (this duty)':'Crew Duty Remaining',v:crewLandingNote},
     {l:'Route Type',v:f.isIntl?'International':'Domestic'},
   ];
   grid.innerHTML=items.map(i=>`<div class="fd-cell"><div class="fd-cell-lbl">${i.l}</div><div class="fd-cell-val">${i.v}</div></div>`).join('');
+  // Diversion implication notice
+  let diversionNote='';
+  if(f.isDiverted){
+    diversionNote=`<div style="background:#FDF4FF;border:1px solid #E9D5FF;border-radius:6px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:#5B21B6;line-height:1.6">
+      <strong>Diversion implications:</strong> ${f.tail} departed ${f.fromCity}, was diverted to <strong>${f.divertedToCity}</strong>, and must still reach <strong>${f.toCity}</strong>.
+      That adds an extra takeoff + landing to this duty period (currently at ${landingsDone}/${maxLandings} landings).
+      ${landingsLeft<=1?`<br><strong>Return sector from ${f.toCity} back to base cannot be flown by this crew.</strong> Fresh crew must be pre-positioned at ${f.toCity}.`:`The sector ${f.divertedToCity}→${f.toCity} can proceed with current crew, but next-leg assignment must be reviewed.`}
+    </div>`;
+  }
   // Chain
   const chain=document.getElementById('fd-chain');
   let html='';
   if(f.chain&&f.chain.length){
     f.chain.forEach((leg,i)=>{
       const cls=leg.affected?'chain-affected':'';
-      const fromAp=apByIata(leg.from);
       const hasLehRestriction=leg.to==='IXL';
       html+=`<div class="chain-leg"><div class="chain-airport ${cls}"><div class="chain-iata">${leg.from}</div><div class="chain-time">${leg.depStr}</div></div>`;
       html+=`<div class="chain-line"></div><div class="chain-arrow">→</div><div class="chain-line"></div>`;
-      const note=hasLehRestriction?`<div style="font-size:9px;color:var(--danger);white-space:nowrap">Leh: landings 08–11h only</div>`:'';
+      const note=hasLehRestriction?`<div style="font-size:9px;color:var(--danger);white-space:nowrap">Leh: 08–11h only</div>`:'';
       html+=`<div class="chain-airport ${leg.affected?'chain-affected':''}"><div class="chain-iata">${leg.to}</div><div class="chain-time">${leg.arrStr}</div>${note}</div>`;
     });
   }
-  chain.innerHTML=html;
+  document.getElementById('fd-chain').innerHTML=html;
+  // Insert diversion note before chain
+  const chainLabel=document.querySelector('#flight-detail [style*="Downstream Flight Chain"]');
+  if(chainLabel&&diversionNote){chainLabel.insertAdjacentHTML('beforebegin',diversionNote);}
   document.getElementById('flight-detail').style.display='block';
 }
 
@@ -813,8 +996,11 @@ function closeFlightDetail(){
 function openEvalFromFlight(){
   const f=fleet.find(x=>x.id===selectedFlightId);
   if(!f) return;
-  const desc=f.status==='AOG'
-    ?`${f.tail} is grounded (AOG) at ${f.toCity}. Flight ${f.flightNo} cannot continue. ${f.pax} passengers on board. ${f.ripple} downstream legs affected.`
+  currentEvalFlight=f;
+  const desc=f.isDiverted
+    ?`${f.tail} flight ${f.flightNo} was diverted from ${f.fromCity}–${f.toCity} to ${f.divertedToCity}. Now at ${f.divertedToCity}, needs to reach ${f.toCity}. ${f.pax} passengers. Crew has ${f.landingsThisDuty} landings this duty.`
+    :f.status==='UNSERVICEABLE'
+    ?`${f.tail} is unserviceable at ${f.toCity}. Flight ${f.flightNo} cannot continue. ${f.pax} passengers on board. ${f.ripple} downstream legs affected.`
     :f.status==='HIGH_RISK'
     ?`${f.tail} flight ${f.flightNo} is ${f.delayMin}min delayed en route ${f.fromCity} to ${f.toCity}. ${f.pax} passengers. ${f.ripple} connecting flights at risk.`
     :`${f.tail} flight ${f.flightNo} is ${f.delayMin}min delayed on ${f.fromCity}–${f.toCity}.`;
@@ -826,92 +1012,325 @@ function openEvalFromFlight(){
 // ═══════════════════════════════════════════
 // SCENARIO EVALUATOR
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// SCENARIO EVALUATOR — context-aware
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// SCENARIO EVALUATOR
+// ═══════════════════════════════════════════
+let _evalContext={}; // holds parsed context for decision logging
+
 function evaluateScenario(){
   const input=document.getElementById('scenario-input').value.trim();
   if(!input) return;
   addAudit('EVALUATION TRIGGERED',input.substring(0,80));
-  const tailMatch=input.match(/VT-[A-Z]{3}/i);
-  const tail=tailMatch?tailMatch[0].toUpperCase():'VT-ANR';
-  const locMatch=input.match(/\b(Phuket|Delhi|Mumbai|Bengaluru|Bangalore|Chennai|Dubai|Singapore|Bangkok|Kolkata|Guwahati|Jaipur|Agra|Leh|Port Blair|Kochi)\b/i);
-  const loc=locMatch?locMatch[0]:'onward station';
-  const isAOG=/aog|grounded|failure|damage|nose.wheel|bird.strike|engine|technical/i.test(input);
-  const isFog=/fog|divert|weather|visibility|ground.stop/i.test(input);
-  const isEtops=/etops|regulatory|certification|u.turn/i.test(input);
-  const isIntl=/phuket|singapore|dubai|bangkok|hong.kong|international|colombo/i.test(input);
-  const isFDTL=/crew|duty|fdtl|timed.out|rest/i.test(input);
-  const targetF=fleet.find(x=>x.tail===tail);
-  const pax=targetF?.pax||ri(160,210);
-  if(isAOG&&targetF){targetF.status='AOG';targetF.delayMin=999;buildRiskFeed();renderRiskFeed();updateKpis();addAudit('AOG DECLARED',`${tail} flagged AOG at ${loc}`);}
+  selectedOptionKey=null;
+  document.getElementById('decision-panel').style.display='none';
+  document.getElementById('decision-confirmed').style.display='none';
 
-  // Eval title
-  document.getElementById('eval-title').textContent=
-    isAOG?`AOG Recovery — ${tail} at ${loc}`:
-    isFog?`Weather Disruption — Ground Hold & Diversions`:
-    isEtops?`Regulatory Compliance — Aircraft Certification Issue`:
-    isFDTL?`Crew Duty Limit — FDTL Management`:
-    `Disruption Analysis — ${tail}`;
-  document.getElementById('eval-sub').textContent=
-    `${pax} passengers affected · ${(targetF?.ripple||ri(2,5))} downstream legs · ${isIntl?'International route':'Domestic route'}`;
+  const tailMatch=input.match(/VT-[A-Z]{3}/i);
+  const tail=tailMatch?tailMatch[0].toUpperCase():null;
+  const targetF=tail?fleet.find(x=>x.tail===tail):currentEvalFlight||null;
+  const locMatch=input.match(/\b(Phuket|Delhi|Mumbai|Bengaluru|Bangalore|Chennai|Dubai|Singapore|Bangkok|Kolkata|Guwahati|Jaipur|Agra|Leh|Port Blair|Kochi|Hyderabad|Ahmedabad|Lucknow)\b/i);
+  const loc=targetF?(targetF.isDiverted?targetF.divertedToCity:targetF.toCity):(locMatch?locMatch[0]:'the affected station');
+  const fromCity=targetF?targetF.fromCity:'origin';
+  const finalDest=targetF?targetF.toCity:loc;
+  const flightNo=targetF?targetF.flightNo:(tail?'6E—':'—');
+  const acType=targetF?targetF.type:'A320neo';
+  const pax=targetF?targetF.pax:ri(160,210);
+  const ripple=targetF?targetF.ripple:ri(2,4);
+
+  const isUnserv=targetF?.status==='UNSERVICEABLE'||/unserviceable|grounded|failure|damage|nose.?wheel|bird.?strike|engine|technical|hydraulic|landing.?gear/i.test(input);
+  const isDiverted=targetF?.isDiverted||/diverted|divert|alternate|weather|fog|ground.?hold/i.test(input);
+  const isFog=/fog|weather|visibility|ground.?stop|low.?vis|divert.*30|30.*divert/i.test(input);
+  const isEtops=/etops|regulatory|certification|u.?turn|not.?certified/i.test(input);
+  const isIntl=targetF?.isIntl||/phuket|singapore|dubai|bangkok|hong.?kong|international|colombo/i.test(input);
+  const isFDTL=/crew|duty|fdtl|timed.?out|rest.?period|hours.?exceeded/i.test(input);
+  const lehChain=targetF?.chain?.some(l=>l.to==='IXL')||/leh/i.test(input);
+
+  // Crew landing analysis
+  const landingsDone=targetF?.landingsThisDuty||0;
+  const maxLandings=3;
+  const landingsLeft=maxLandings-landingsDone;
+  const pilot=targetF?.pilotId?pilots.find(p=>p.pid===targetF.pilotId):null;
+
+  if(isUnserv&&targetF&&targetF.status!=='UNSERVICEABLE'){
+    targetF.status='UNSERVICEABLE';targetF.delayMin=999;
+    buildRiskFeed();renderRiskFeed();updateKpis();
+    addAudit('UNSERVICEABLE DECLARED',`${tail} grounded at ${loc}`);
+  }
+
+  // Spare aircraft search
+  const nearbyAps=isIntl?['DEL','BOM','BLR','MAA','SIN','DXB']:['DEL','BOM','BLR','MAA','CCU','HYD'];
+  const spare=fleet.filter(x=>x.status==='ON_TIME'&&x.type===acType&&nearbyAps.includes(x.city)&&x.tail!=(tail||'_')).slice(0,1)[0];
+  const pilotList=pilots.filter(p=>p.qualified&&p.dutyRem>210&&!p.fdtlAlert&&!p.fdtlCrit&&!p.tailId).slice(0,2);
+  const p1=pilotList[0],p2=pilotList[1];
+  const cabinAvail=cabinCrew.filter(c=>c.qualified&&c.dutyRem>180&&!c.fdtlAlert&&nearbyAps.includes(c.curLoc)).slice(0,1)[0];
+
+  // ── Build realistic Option B — find actual upcoming flights with seat availability ──
+  // Simulate: find other ON_TIME flights on same route, give each a seat count
+  const sameRouteFlight=fleet.filter(x=>
+    x.status==='ON_TIME'&&
+    x.from===targetF?.from&&x.to===targetF?.to&&
+    x.id!==targetF?.id
+  ).slice(0,4);
+  // Also find flights with connections (1-stop via hub)
+  const hubAps=AIRPORTS.filter(a=>a.type==='hub');
+  const viaFlights=sameRouteFlight.length<2?fleet.filter(x=>{
+    if(x.status!=='ON_TIME') return false;
+    const hub=hubAps.find(h=>h.iata===x.to);
+    if(!hub) return false;
+    const onward=fleet.filter(y=>y.status==='ON_TIME'&&y.from===x.to&&y.to===targetF?.to).slice(0,1)[0];
+    return !!onward;
+  }).slice(0,2):[];
+
+  // Seat inventory for each onward option
+  const seatsPerAc=targetF?.type==='ATR 72'?72:targetF?.type?.includes('321')?222:180;
+  const optBFlights=sameRouteFlight.map((x,i)=>{
+    const seatsAvail=ri(12,seatsPerAc-20);
+    const depOffset=ri(2,9);
+    return {flightNo:x.flightNo,type:x.type,direct:true,seatsAvail,depOffset,tail:x.tail};
+  });
+  const optBVia=viaFlights.slice(0,1).map(x=>{
+    const onward=fleet.filter(y=>y.status==='ON_TIME'&&y.from===x.to&&y.to===targetF?.to).slice(0,1)[0];
+    return {flightNo:x.flightNo+'+'+onward?.flightNo,type:x.type,direct:false,seatsAvail:ri(15,40),depOffset:ri(1,4),via:x.to,tail:x.tail};
+  });
+  const allOptionB=[...optBFlights,...optBVia];
+  const totalSeats=allOptionB.reduce((s,f)=>s+f.seatsAvail,0);
+  const paxCovered=Math.min(pax,totalSeats);
+  const paxOverflow=Math.max(0,pax-totalSeats);
+
+  // Priority passenger breakdown (simulated)
+  const paxConnecting=Math.round(pax*ri(15,35)/100);
+  const paxDirect=pax-paxConnecting;
+  const paxUrgent=ri(2,8);
+
+  // Store context for decision logging
+  _evalContext={
+    tail:tail||targetF?.tail||'—',
+    flightNo,loc,fromCity,finalDest,pax,ripple,acType,
+    isUnserv,isDiverted,isIntl,isFog,
+    spare,p1,p2,cabinAvail,
+    allOptionB,paxCovered,paxOverflow,
+    landingsDone,landingsLeft,pilot,
+    targetF,
+  };
+
+  // ── Render ──
+  const eventType=isDiverted?`Diversion — ${fromCity}→${loc} (intending ${finalDest})`:isUnserv?'Aircraft Unserviceable':isFog?'Weather Ground Hold':isEtops?'Regulatory Hold':isFDTL?'Crew Duty Limit':targetF?.delayMin?`${targetF.delayMin}min Delay`:'Operational Disruption';
+
+  document.getElementById('eval-title').textContent=isDiverted?`Diversion Recovery — ${flightNo} at ${loc}`:isUnserv?`Recovery — ${tail||'Aircraft'} at ${loc}`:isFog?`Weather Ground Hold — ${loc}`:isEtops?`Regulatory Hold — ${tail||'Aircraft'}`:isFDTL?`Crew Duty — ${loc}`:(`Delay Recovery — ${flightNo}`);
+  document.getElementById('eval-sub').textContent=`${flightNo}  ·  ${fromCity} → ${finalDest}${isDiverted?'  ·  Currently at '+loc:''}  ·  ${pax} pax  ·  ${ripple} downstream sector${ripple!==1?'s':''} at risk`;
 
   // Banner
   const bannerIcon=`<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-  document.getElementById('eval-banner').innerHTML=`<div class="disruption-banner">${bannerIcon}<div>
-    <div class="title">${isAOG?'Aircraft on Ground — Immediate Action Required':isFog?'Ground Stop / Diversion Event':isEtops?'Regulatory Non-Compliance — Flight Grounded':isFDTL?'Crew Duty Limit Breach':'Delay Escalation Risk'}</div>
-    <div class="desc">${isAOG?`${tail} is unable to continue operations at ${loc}. The aircraft requires maintenance clearance before next departure. ${pax} passengers are being held at the terminal.`:
-    isFog?`Low visibility conditions have resulted in ground holds and multiple diversions. Crews are accumulating duty time at off-base locations and may be unable to operate return sectors.`:
-    isEtops?`Aircraft certification mismatch detected. The flight is grounded pending regulatory clearance from DGCA. Affected passengers cannot deplane at transit point without visa implications.`:
-    isFDTL?`Crew duty hours are approaching or have exceeded DGCA-mandated limits. Replacement crew must be positioned before any further operations are permissible.`:
-    `Ongoing delay of ${targetF?.delayMin||'—'}min risks cascading into ${targetF?.ripple||2} downstream connections. Passengers with onward bookings are at risk of missing connections.`}</div>
-  </div></div>`;
+  const bannerDesc=isDiverted
+    ?`${flightNo} (${acType}) departed ${fromCity} and was diverted to ${loc} — it has not yet reached its intended destination of ${finalDest}. The aircraft must operate a further sector ${loc}→${finalDest}. Crew has completed ${landingsDone} landing${landingsDone!==1?'s':''} this duty period. ${landingsLeft<=1?`<strong>Crew cannot operate the return sector from ${finalDest} — fresh crew must be pre-positioned at ${finalDest}.</strong>`:`Crew can operate the ${loc}→${finalDest} sector, but the onward assignment from ${finalDest} must be reviewed.`}`
+    :isUnserv?`${tail||'The aircraft'} (${acType}) is grounded at ${loc}. ${pax} passengers are at the terminal. The aircraft's next ${ripple} scheduled sectors are blocked.`
+    :isFog?`Ground hold at ${loc}. Multiple flights diverting to alternates. Crews accumulating extra landings and duty time at off-base locations.`
+    :isEtops?`${tail||'The aircraft'} does not carry the required certification for this route. Held pending DGCA clearance.`
+    :isFDTL?`Crew on ${flightNo} is at or near the DGCA Flight Duty Time Limit. No further sector permissible until mandatory rest is complete.`
+    :`${flightNo} is +${targetF?.delayMin||'—'}min on ${fromCity}→${finalDest}. ${ripple} downstream connection${ripple!==1?'s':''} at risk.`;
 
-  // Meta stats
-  const lehWarning=input.toLowerCase().includes('leh')||targetF?.chain?.some(l=>l.to==='IXL');
+  document.getElementById('eval-banner').innerHTML=`<div class="disruption-banner">${bannerIcon}<div><div class="title">${eventType}</div><div class="desc">${bannerDesc}</div></div></div>`;
+
+  // Meta
   document.getElementById('eval-meta').innerHTML=`
     <div class="eval-meta-cell"><div class="val">${pax}</div><div class="lbl">Passengers Affected</div></div>
-    <div class="eval-meta-cell"><div class="val">${targetF?.ripple||ri(2,5)}</div><div class="lbl">Downstream Legs at Risk</div></div>
-    <div class="eval-meta-cell"><div class="val">${isAOG?'12–18h':isFog?'4–8h':'2–5h'}</div><div class="lbl">Estimated Recovery Time</div></div>
-    <div class="eval-meta-cell"><div class="val">${isIntl?'Intl':'Domestic'}</div><div class="lbl">Route Classification</div></div>
-    ${lehWarning?`<div class="eval-meta-cell" style="grid-column:1/-1;background:var(--warn-bg);border-color:var(--warn-border)"><div class="val" style="color:var(--warn);font-size:14px">⚠ Leh Landing Window: 08:00–11:00 only</div><div class="lbl">Any rescheduled Leh sector must depart before 08:30. Post-11:00 attempts will be denied. Plan accordingly.</div></div>`:''}
+    <div class="eval-meta-cell"><div class="val">${ripple}</div><div class="lbl">Downstream Sectors Blocked</div></div>
+    <div class="eval-meta-cell"><div class="val">${isDiverted?landingsDone+'/'+maxLandings+' ldgs':(isUnserv?ri(8,16)+'h':ri(1,4)+'h')}</div><div class="lbl">${isDiverted?'Crew Landings this Duty':'Est. Recovery Window'}</div></div>
+    <div class="eval-meta-cell"><div class="val">${isIntl?'International':'Domestic'}</div><div class="lbl">Route Type</div></div>
+    ${isDiverted&&landingsLeft<=1?`<div class="eval-meta-cell" style="grid-column:1/-1;background:var(--danger-bg);border-color:var(--danger-border)"><div class="val" style="color:var(--danger);font-size:13px">⚠ Crew cannot operate return sector from ${finalDest}</div><div class="lbl">This crew has ${landingsDone} landings. After ${loc}→${finalDest}, they hit their limit. A fresh crew pair must be positioned to ${finalDest} before the next scheduled departure from there.</div></div>`:''}
+    ${lehChain?`<div class="eval-meta-cell" style="grid-column:1/-1;background:var(--warn-bg);border-color:var(--warn-border)"><div class="val" style="color:var(--warn);font-size:13px">⚠ Leh (IXL) in downstream chain — landings 08:00–11:00 only</div><div class="lbl">Rescheduled Leh sector must block off before 08:45 local. Aircraft arriving after 11:00 will be turned back by ATC.</div></div>`:''}
   `;
 
-  // Options — no competitor airline names, realistic choices
-  const nearbySpare=fleet.filter(x=>x.status==='ON_TIME'&&x.type===( targetF?.type||'A320neo')&&['DEL','BOM','BLR','MAA','SIN'].includes(x.city)).slice(0,1)[0];
-  const availPilot=pilots.filter(p=>p.qualified&&p.dutyRem>200&&!p.fdtlAlert&&!p.fdtlCrit).slice(0,1)[0];
+  // Build Option B seat breakdown HTML
+  let optBHtml='';
+  if(allOptionB.length>0){
+    const rows=allOptionB.map(f=>`
+      <tr>
+        <td style="font-weight:600;color:var(--text)">${f.flightNo}</td>
+        <td>${f.direct?'Direct':'Via '+f.via}</td>
+        <td>${f.type}</td>
+        <td>+${f.depOffset}h from now</td>
+        <td style="font-weight:600;color:${f.seatsAvail>20?'var(--ok)':f.seatsAvail>10?'var(--warn)':'var(--danger)'}">${f.seatsAvail} seats</td>
+      </tr>`).join('');
+    optBHtml=`
+      <div style="margin:10px 0 4px;font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Available services on ${fromCity}–${finalDest}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px">
+        <thead><tr style="background:var(--surface2)"><th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--text-soft);border-bottom:1px solid var(--border)">Flight</th><th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--text-soft);border-bottom:1px solid var(--border)">Routing</th><th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--text-soft);border-bottom:1px solid var(--border)">Aircraft</th><th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--text-soft);border-bottom:1px solid var(--border)">Departure</th><th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--text-soft);border-bottom:1px solid var(--border)">Seats Free</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="font-size:12px;color:var(--text-mid);padding:8px 10px;background:${paxOverflow>0?'var(--warn-bg)':'var(--ok-bg)'};border:1px solid ${paxOverflow>0?'var(--warn-border)':'var(--ok-border)'};border-radius:4px">
+        ${paxCovered} of ${pax} passengers can be reaccommodated across these services.
+        ${paxOverflow>0?`<strong>${paxOverflow} passengers cannot be covered by these departures alone</strong> — hotel accommodation required until next available capacity.`:'All passengers can be accommodated without hotel expense.'}
+        <br><strong>Priority:</strong> ${paxUrgent} urgent/medical cases → first available seat regardless of flight. ${paxConnecting} with onward connections → direct flights only.
+        ${sameRouteFlight.length===0?'<br><em>No direct services found. All options via connecting hub.</em>':''}
+      </div>`;
+  } else {
+    optBHtml=`<div style="font-size:12px;color:var(--text-mid);padding:8px;background:var(--warn-bg);border-radius:4px;border:1px solid var(--warn-border)">No direct services found on ${fromCity}–${finalDest} in the system. Check with scheduling for next available capacity on this route.</div>`;
+  }
+
+  const spareHtml=spare?`Tail <strong>${spare.tail}</strong> (${spare.type}) on ground at <strong>${spare.city}</strong>. Ferry to ${isDiverted?loc:loc}: est. ${spare.city===(isDiverted?loc:loc)?'already on-station':ri(2,4)+'h'}.`:`No same-type spare at nearby bases right now. Fleet planning to identify ${acType} within 4h ferry range.`;
+  const crewHtml=p1?`<strong>${p1.rank} ${p1.pid}</strong> (base: ${p1.base}, ${p1.dutyRem}min remaining)${p2?` + <strong>${p2.rank} ${p2.pid}</strong> (${p2.dutyRem}min)`:''} — qualified and legal.`:'No eligible crew within limits at nearby bases.';
+
   document.getElementById('eval-options').innerHTML=`
-    <div class="eval-card">
-      <div class="eval-card-hdr opt1"><h3>Option A — Deploy Spare Aircraft</h3><p>Highest reliability, protects all downstream legs</p></div>
+    <div class="eval-card" id="option-card-A">
+      <div class="eval-card-hdr opt1"><h3>Option A — Position Spare Aircraft</h3><p>Protects all downstream sectors, highest reliability</p></div>
       <div class="eval-card-body">
-        ${nearbySpare?`Position spare tail <strong>${nearbySpare.tail}</strong> (${nearbySpare.type}) from <strong>${nearbySpare.city}</strong> to ${loc}. `:'Identify available spare from nearest IndiGo base. '}
-        ${availPilot?`Assign <strong>${availPilot.rank} ${availPilot.pid}</strong> with ${availPilot.dutyRem}min duty remaining. `:'Crew rostering to confirm eligible pilot pair. '}
-        Ferry sector required before passenger operation can commence. All <strong>${pax} passengers</strong> depart ${isAOG?'3–5h':'1–2h'} behind original schedule.
-        ${isIntl?' Immigration hold coordinated with local airport authority — no additional visa complications.':''}
-        Downstream chain resumes on schedule from next sector onwards.
+        ${spareHtml}<br>${crewHtml}
+        ${cabinAvail?`Cabin crew: <strong>${cabinAvail.name}</strong> (${cabinAvail.role}, ${cabinAvail.curLoc}) available.`:'Cabin crew rostering to confirm.'}
+        <br><br>All <strong>${pax} passengers</strong> depart approx. ${isUnserv?ri(4,7):isDiverted?ri(2,4):ri(1,2)}h behind schedule.
+        ${isDiverted?`Aircraft completes ${loc}→${finalDest} sector, then spare takes over. Current crew released after ${finalDest} landing.`:''}
+        ${isIntl?' Passenger hold coordinated airside.':''}
+        Downstream chain from <strong>${targetF?.chain?.[1]?.to||'next station'}</strong> recovers to schedule.
       </div>
+      <button class="option-select-btn" id="btn-select-A" onclick="selectOption('A')">Select this option</button>
     </div>
-    <div class="eval-card">
-      <div class="eval-card-hdr opt2"><h3>Option B — Rebook &amp; Next Service</h3><p>Lowest disruption cost, longer wait for passengers</p></div>
+    <div class="eval-card" id="option-card-B">
+      <div class="eval-card-hdr opt2"><h3>Option B — Reaccommodate on Next Services</h3><p>No ferry cost — uses existing inventory</p></div>
       <div class="eval-card-body">
-        Cancel current sector. Accommodate <strong>${pax} passengers</strong> across the next <strong>${ri(2,3)} departures</strong> on the same route (earliest available: ${ri(3,7)}h). 
-        ${isIntl?'Passengers who have cleared immigration require airside holding and coordinated hotel arrangement — <strong>no re-immigration required</strong> if held airside.':'Hotel and meal vouchers issued for delays exceeding 3 hours per DGCA guidelines.'}
-        ${isAOG?`AOG team dispatched to ${loc} with required components. Aircraft released for ferry after clearance. No commercial operation until maintenance sign-off.`:'Delay absorbed within the rotation — no further cascading impact.'}
-        ${targetF?.chain?.some(l=>l.to==='IXL')?'<strong>Note:</strong> Any rebooked passenger connecting to Leh must be on first available morning service — Leh airport permits landings until 11:00 only.':''}
+        ${optBHtml}
+        <br>${isIntl?`Passengers at ${loc} who have cleared immigration must be held <strong>airside only</strong> — hotel or lounge arranged.`:'Meal vouchers and hotel per DGCA guidelines for delays over 3h.'}
+        ${isUnserv?`Maintenance team positioned to ${loc}. No ops on ${tail||'this aircraft'} until engineer sign-off.`:''}
+        ${isDiverted&&landingsLeft>=1?`Current crew can still operate ${loc}→${finalDest}. Aircraft repositions with pax. <strong>Fresh crew must await at ${finalDest} for the return sector.</strong>`:''}
+        ${lehChain?'<strong>Leh note:</strong> Passengers connecting to Leh — morning service only. Leh closes to arrivals after 11:00.':''}
       </div>
+      <button class="option-select-btn" id="btn-select-B" onclick="selectOption('B')">Select this option</button>
     </div>
-    <div class="eval-card">
-      <div class="eval-card-hdr opt3"><h3>Option C — Charter or Partial Recovery</h3><p>Best outcome for high-value and connecting passengers</p></div>
+    <div class="eval-card" id="option-card-C">
+      <div class="eval-card-hdr opt3"><h3>Option C — Priority Split</h3><p>Differentiated handling — protect time-critical passengers first</p></div>
       <div class="eval-card-body">
-        Arrange a <strong>charter operation</strong> for priority passengers — unaccompanied minors, medical cases, and passengers with same-day international connections — on the earliest possible slot.
-        Remaining passengers held for next scheduled service.
-        ${isIntl?'Transit passengers with visa restrictions cannot deplane — coordination with ground handler and immigration required immediately. Catering resupply to aircraft within 90 minutes.':'Station manager to coordinate priority passenger identification at gate.'}
-        ${isEtops?'<strong>Regulatory note:</strong> DGCA notification of aircraft certification mismatch filed. Replacement aircraft must hold appropriate certification before re-assigning to this route.':''}
-        ${isFog?`Crew positioning: pilots currently at divert airports (Jaipur/Agra) are accumulating duty time. Relief crew to be dispatched from <strong>DEL</strong> by surface transport to meet minimum rest requirements before next operation.`:''}
+        From ${pax} passengers, triage into priority groups:<br>
+        <strong>${paxUrgent} urgent / medical</strong> → first available seat on any routing.<br>
+        <strong>${paxConnecting} with onward connections</strong> → direct flights only, rebooking priority.<br>
+        <strong>${paxDirect} standard</strong> → reaccommodated per Option B availability.
+        <br><br>
+        ${isIntl?`Ground handler at ${loc} escorts priority group to lounge airside. Immigration hold maintained.`:'Station manager activates priority queue at gate.'}
+        ${isDiverted?`<strong>Crew note:</strong> If ${loc}→${finalDest} sector proceeds with current crew (${landingsDone} landings done), ensure ground handler pre-clears priority boarding to minimise turnaround time. Fresh crew pre-positioned at ${finalDest} before aircraft lands.`:''}
+        ${isEtops?`<strong>Regulatory:</strong> File DGCA incident report. Replacement aircraft must carry equivalent certification.`:''}
+        ${isFog?`Crews at divert airports: surface transport to be organised. Min ${ri(10,12)}h rest before return ops.`:''}
       </div>
+      <button class="option-select-btn" id="btn-select-C" onclick="selectOption('C')">Select this option</button>
     </div>
   `;
 
-  addAudit('OPTIONS GENERATED',`${tail} @ ${loc}: 3 recovery options evaluated. Pax: ${pax}. Downstream: ${targetF?.ripple||'—'} legs.`);
+  addAudit('RECOVERY OPTIONS',`${tail||'—'} @ ${loc}: ${eventType}. Pax: ${pax}. Sectors: ${ripple}. Options A/B/C generated.`);
   document.getElementById('eval-results').style.display='block';
   window.scrollTo(0,0);
+}
+
+function selectOption(key){
+  selectedOptionKey=key;
+  // Visual: ring selected card, deselect others
+  ['A','B','C'].forEach(k=>{
+    const card=document.getElementById(`option-card-${k}`);
+    const btn=document.getElementById(`btn-select-${k}`);
+    if(card&&btn){
+      card.classList.toggle('option-selected',k===key);
+      btn.classList.toggle('chosen',k===key);
+      btn.textContent=k===key?'✓ Selected':'Select this option';
+    }
+  });
+  const c=_evalContext;
+  const optLabel={'A':'Option A — Position Spare Aircraft','B':'Option B — Reaccommodate on Next Services','C':'Option C — Priority Split'}[key];
+  document.getElementById('decision-option-label').textContent=`— ${optLabel}`;
+
+  // Build consequence text based on which option and what the situation was
+  let consequence='';
+  if(key==='A'){
+    consequence=`<strong>What changes in the system:</strong> ${c.tail||c.flightNo} is marked as under recovery. `;
+    if(c.spare) consequence+=`Spare tail ${c.spare.tail} is flagged as being positioned to ${c.loc} — it will no longer appear as available at ${c.spare.city} for other assignments. `;
+    if(c.p1) consequence+=`Crew ${c.p1.pid} is now assigned to the recovery operation and their duty clock continues. `;
+    if(c.isDiverted) consequence+=`Diversion flag on ${c.flightNo} will be cleared once ${c.loc}→${c.finalDest} sector completes. Current crew released after landing at ${c.finalDest}.`;
+    else consequence+=`Disruption flag will clear once spare aircraft departs ${c.loc} with passengers.`;
+  } else if(key==='B'){
+    const fltList=c.allOptionB.map(f=>f.flightNo).join(', ');
+    consequence=`<strong>What changes in the system:</strong> ${c.flightNo} is declared cancelled or delayed indefinitely. `;
+    consequence+=c.allOptionB.length>0
+      ?`${c.paxCovered} passengers are being absorbed into ${fltList}. Those flights' available seat counts are updated accordingly. `
+      :`No confirmed onward capacity yet — passengers held at ${c.loc} pending scheduling confirmation. `;
+    if(c.paxOverflow>0) consequence+=`${c.paxOverflow} passengers cannot be immediately placed — hotel accommodation actioned at ${c.loc}. `;
+    if(c.isDiverted&&c.landingsLeft>=1) consequence+=`Current crew proceeds ${c.loc}→${c.finalDest}. Fresh crew pre-positioned at ${c.finalDest} for onward ops. `;
+    consequence+=`Disruption flag will clear once all passengers are confirmed on replacement services.`;
+  } else {
+    consequence=`<strong>What changes in the system:</strong> ${c.flightNo} passengers split by priority. ${c.paxUrgent} urgent/medical cases given first-available seats — their booking status updated immediately. ${c.paxConnecting} connecting passengers rebooking on direct services only — their connections flagged for monitoring. Remaining ${c.paxDirect} passengers queued for standard reaccommodation. `;
+    if(c.isDiverted) consequence+=`Crew ${c.pilot?c.pilot.pid:'assigned'} proceeds ${c.loc}→${c.finalDest} if within landing limits. Return-sector crew change acknowledged — crew swap at ${c.finalDest} logged.`;
+    else consequence+=`Disruption flag remains active until all passenger groups are confirmed on onward services.`;
+  }
+  document.getElementById('decision-consequence').innerHTML=consequence;
+  document.getElementById('decision-panel').style.display='block';
+  document.getElementById('decision-confirmed').style.display='none';
+  document.getElementById('decision-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function confirmDecision(){
+  if(!selectedOptionKey) return;
+  const note=document.getElementById('decision-note').value.trim();
+  const c=_evalContext;
+  const optLabel={'A':'Option A — Spare Aircraft','B':'Option B — Reaccommodate','C':'Option C — Priority Split'}[selectedOptionKey];
+  const ts=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  // Update fleet state — mark flight as acknowledged
+  if(c.targetF){
+    acknowledgedFlights.add(c.targetF.id);
+    // If spare assigned, mark it as repositioning
+    if(selectedOptionKey==='A'&&c.spare){
+      const spareF=fleet.find(x=>x.tail===c.spare.tail);
+      if(spareF){spareF.status='REPOSITIONING';spareF.delayMin=0;}
+    }
+    buildRiskFeed();renderRiskFeed();updateKpis();
+  }
+
+  const confirmedText=`${optLabel} acknowledged at ${ts} for ${c.flightNo} (${c.tail||'—'}). ${note?'Note: '+note:''} — Disruption flag cleared from live feed.`;
+  addAudit('DECISION ACKNOWLEDGED',`${c.flightNo} · ${optLabel}${note?' · '+note:''}`);
+
+  document.getElementById('decision-confirmed').style.display='block';
+  document.getElementById('decision-confirmed-text').textContent=confirmedText;
+  document.getElementById('decision-panel').style.display='none';
+
+  // Dim the option cards to show it's resolved
+  ['A','B','C'].forEach(k=>{
+    const card=document.getElementById(`option-card-${k}`);
+    if(card) card.style.opacity=k===selectedOptionKey?'1':'0.45';
+  });
+}
+
+function switchCrewTab(tab){
+  activeCrewTab=tab;
+  document.querySelectorAll('.crew-tab').forEach(t=>t.classList.toggle('active',t.dataset.crew===tab));
+  renderCrewTable();
+}
+
+function renderCrewTable(){
+  let html='';
+  if(activeCrewTab==='pilots'){
+    html=`<table><thead><tr><th>Pilot ID</th><th>Rank</th><th>Base</th><th>Current Location</th><th>Duty Remaining</th><th>Status</th><th>Night Landings</th><th>A320</th><th>A321</th></tr></thead><tbody>`;
+    html+=pilots.map(p=>{
+      const sc=p.fdtlCrit?'danger':p.fdtlAlert?'warn':p.onDuty?'ok':'';
+      const lbl=p.fdtlCrit?'Critical':p.fdtlAlert?'Duty Alert':p.onDuty?'Active':'Off Duty';
+      const barColor=p.fdtlCrit?'var(--danger)':p.fdtlAlert?'var(--warn)':'var(--ok)';
+      const pct=Math.min(100,Math.round(p.dutyRem/480*100));
+      return `<tr><td class="strong">${p.pid}</td><td>${p.rank}</td><td>${p.base}</td><td>${p.curLoc}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor}"></div></div><span style="color:${barColor};font-size:12px">${p.dutyRem}min</span></div></td>
+        <td>${sc?`<span class="badge ${sc}">${lbl}</span>`:lbl}</td>
+        <td>${p.nightLandings}</td><td>${p.type320?'✓':'—'}</td><td>${p.type321?'✓':'—'}</td></tr>`;
+    }).join('');
+  } else {
+    html=`<table><thead><tr><th>Crew ID</th><th>Name</th><th>Role</th><th>Base</th><th>Location</th><th>Duty Remaining</th><th>Status</th><th>Experience</th></tr></thead><tbody>`;
+    html+=cabinCrew.map(c=>{
+      const sc=c.fdtlCrit?'danger':c.fdtlAlert?'warn':c.onDuty?'ok':'';
+      const lbl=c.fdtlCrit?'Critical':c.fdtlAlert?'Duty Alert':c.onDuty?'Active':'Off Duty';
+      const barColor=c.fdtlCrit?'var(--danger)':c.fdtlAlert?'var(--warn)':'var(--ok)';
+      const pct=Math.min(100,Math.round(c.dutyRem/420*100));
+      return `<tr><td class="strong">${c.cid}</td><td>${c.name}</td><td>${c.role}</td><td>${c.base}</td><td>${c.curLoc}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor}"></div></div><span style="color:${barColor};font-size:12px">${c.dutyRem}min</span></div></td>
+        <td>${sc?`<span class="badge ${sc}">${lbl}</span>`:lbl}</td>
+        <td>${c.yrsExp} yrs</td></tr>`;
+    }).join('');
+  }
+  html+='</tbody></table>';
+  document.getElementById('table-content').innerHTML=html;
 }
 
 function closeEval(){
@@ -926,31 +1345,26 @@ function showTable(type){
   document.getElementById('map').classList.add('locked');
   document.getElementById('table-overlay').style.display='block';
   document.getElementById('tbl-title').textContent={fleet:'Fleet Database',crew:'Crew & Duty Status',airports:'Airport Operations',audit:'Audit Log'}[type]||type;
+  // Show/hide crew sub-tabs
+  document.getElementById('crew-tabs-wrap').style.display=type==='crew'?'block':'none';
   addAudit('VIEW',type.toUpperCase()+' database accessed');
   let html='';
   if(type==='fleet'){
     html=`<table><thead><tr><th>Tail</th><th>Flight</th><th>Type</th><th>From</th><th>To</th><th>Status</th><th>Delay</th><th>Affected Legs</th><th>Passengers</th><th>Next MX</th></tr></thead><tbody>`;
     html+=fleet.map(f=>{
-      const sc=f.status==='AOG'?'danger':f.status==='HIGH_RISK'?'warn':f.status==='DELAYED'?'warn':'ok';
+      const sc=f.status==='UNSERVICEABLE'?'warn':f.status==='HIGH_RISK'?'warn':f.status==='DELAYED'?'warn':'ok';
       const dl=f.delayMin>0&&f.delayMin<999?'+'+f.delayMin+'min':f.delayMin===999?'Grounded':'—';
       return `<tr><td class="strong">${f.tail}</td><td>${f.flightNo}</td><td>${f.type}</td><td>${f.from}</td><td>${f.to}</td>
-        <td><span class="badge ${sc}">${f.status==='ON_TIME'?'On Time':f.status==='AOG'?'AOG':f.status==='HIGH_RISK'?'High Risk':'Delayed'}</span></td>
+        <td><span class="badge ${sc}">${f.status==='ON_TIME'?'On Time':f.status==='UNSERVICEABLE'?'Unserviceable':f.status==='HIGH_RISK'?'High Risk':'Delayed'}</span></td>
         <td>${dl}</td><td>${f.ripple||'—'}</td><td>${f.pax}</td><td>${f.nextMx}</td></tr>`;
     }).join('');
     html+='</tbody></table>';
+    document.getElementById('table-content').innerHTML=html;
   } else if(type==='crew'){
-    html=`<table><thead><tr><th>Pilot ID</th><th>Rank</th><th>Base</th><th>Current Location</th><th>Duty Remaining</th><th>Status</th><th>Night Landings</th><th>A320</th><th>A321</th></tr></thead><tbody>`;
-    html+=pilots.map(p=>{
-      const sc=p.fdtlCrit?'danger':p.fdtlAlert?'warn':p.onDuty?'ok':'';
-      const lbl=p.fdtlCrit?'Critical':p.fdtlAlert?'Duty Alert':p.onDuty?'Active':'Off Duty';
-      const barColor=p.fdtlCrit?'var(--danger)':p.fdtlAlert?'var(--warn)':'var(--ok)';
-      const pct=Math.min(100,Math.round(p.dutyRem/480*100));
-      return `<tr><td class="strong">${p.pid}</td><td>${p.rank}</td><td>${p.base}</td><td>${p.curLoc}</td>
-        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor}"></div></div><span style="color:${barColor};font-size:12px">${p.dutyRem}min</span></div></td>
-        <td>${sc?`<span class="badge ${sc}">${lbl}</span>`:lbl}</td>
-        <td>${p.nightLandings}</td><td>${p.type320?'✓':'—'}</td><td>${p.type321?'✓':'—'}</td></tr>`;
-    }).join('');
-    html+='</tbody></table>';
+    activeCrewTab='pilots';
+    document.querySelectorAll('.crew-tab').forEach(t=>t.classList.toggle('active',t.dataset.crew==='pilots'));
+    renderCrewTable();
+    return;
   } else if(type==='airports'){
     html=`<table><thead><tr><th>ICAO</th><th>IATA</th><th>City</th><th>Type</th><th>Curfew</th><th>Closing Time</th><th>A321 Tug</th><th>Customs 24/7</th><th>Runway (m)</th><th>Restrictions</th></tr></thead><tbody>`;
     html+=AIRPORTS.map(a=>`<tr>
@@ -1025,7 +1439,7 @@ document.getElementById('feed-filters').addEventListener('click',e=>{
 // ═══════════════════════════════════════════
 function tick(){
   // Move planes
-  fleet.filter(f=>f.status!=='AOG').slice(0,10).forEach(f=>{
+  fleet.filter(f=>f.status!=='UNSERVICEABLE').slice(0,10).forEach(f=>{
     f.progress=Math.min(1,f.progress+rn(0.002,0.010));
     f.lat=f.fromLat+(f.toLat-f.fromLat)*f.progress+rn(-0.05,0.05);
     f.lng=f.fromLng+(f.toLng-f.fromLng)*f.progress+rn(-0.05,0.05);
@@ -1056,8 +1470,9 @@ async function setLoad(pct,msg){
 async function boot(){
   await setLoad(15,'Generating IndiGo fleet data (300 aircraft)...');
   buildFleet();
-  await setLoad(40,'Building crew roster (1,000 pilots, FDTL records)...');
+  await setLoad(40,'Building crew roster (1,000 pilots, 800 cabin crew)...');
   buildPilots();
+  buildCabinCrew();
   await setLoad(65,'Calculating network risk...');
   buildRiskFeed();
   await setLoad(80,'Rendering operations dashboard...');
